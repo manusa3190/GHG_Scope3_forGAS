@@ -1,0 +1,48 @@
+<template>
+  <h1>一覧</h1>
+
+  <!-- <div ref='データ一覧grid'></div> -->
+  <div id="example"></div>
+
+  <button class="btn btn-primary" @click="save">保存</button>
+</template>
+
+<script>
+const index = defineComponent({
+  async setup(){
+    // const router = useRouter()
+
+    var hot;
+
+    onMounted(async()=>{
+        hot = new Handsontable(document.getElementById('example'), {
+          // columns:['品目コード','品名','カテゴリー','担当部署','担当者名'],
+          data: await fetch(),
+          rowHeaders: true,
+          colHeaders: true,
+          height: 'auto',
+          autoWrapRow: true,
+          autoWrapCol: true,
+          licenseKey: 'non-commercial-and-evaluation' // for non-commercial use only
+        });      
+    })
+
+    await fetch自所属users()
+
+    const fetch = async()=> new Promise((resolve)=>{
+      const currentUser = 自所属users.find(item=>item['メールアドレス']===currentUserEmail.innerText)
+
+      google.script.run
+        .withSuccessHandler(res=>resolve(res))
+        .get自所属の原資材(currentUser['所属名'])
+    })
+
+    function save(){
+      console.log(hot.getData())
+    }
+
+    return {currentUserEmail,save}
+  },
+  template:'#index'
+})
+</script>
