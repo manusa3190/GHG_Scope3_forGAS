@@ -1,60 +1,70 @@
-<template>
-  <h1>構成マスタ管理</h1>
-  <div>{{currentUserEmail.innerText}}</div>
-
-  <!-- <div ref='データ一覧grid'></div> -->
+<template type="text/x-template" id="text-input">
+  <label class="form-control w-full max-w-xs">
+    <div class="label">
+      <span class="label-text"><slot></slot></span>
+    </div>
+    <input type="number" :value="props.modelValue" @input="$emit('update:modelValue',$event.target.value)"
+     class="input input-bordered input-sm w-full max-w-xs" />
+  </label>
 </template>
 
 <script>
-const components = defineComponent({
-  async setup(){
-    // const router = useRouter()
-    // const データ一覧grid = ref()
-
-    // onMounted(()=>{
-    //   const grid = new Grid({
-    //     // columns: [
-    //     //   {
-    //     //     id:"品目id",
-    //     //     hidden:true
-    //     //   },{
-    //     //     name:"品名",
-    //     //     formatter:(cell,row)=>html(`<div class="text-end font-bold text-lg">${cell}</div>`)
-    //     //   }
-    //     // ],
-    //     data: Object.values(データ一覧),
-    //     style:{
-    //       tr:(row,rowIndex)=>{
-    //         return rowIndex === 1? {className:'selected'}:{}
-    //       }
-    //     },
-    //     className:{
-    //       th:'!p-1 text-center',
-    //       td:'!bg-inherit !py-0.5 text-center whitespace-nowrap',
-    //     },
-    //     // sort:true,
-    //     // search:true,
-    //     fixedHeader:true,
-    //     height:"800px"
-
-    //   }).render(データ一覧grid.value);
-
-    //   // 行をクリックすると詳細に飛ぶ
-    //   grid.on('rowClick',(...args) => {
-    //     const {cells} = args[1]
-    //     console.log(cells)
-    //     const データid = cells[0].data
-    //     router.push(String(データid))            
-    //   })
-    // })
-
-    // if(!Object.keys(データ一覧).length){
-    //   await fetchデータ一覧()
-    // }
-
-    // return {データ一覧grid}
-    return {currentUserEmail}
+const TextInput = defineComponent({
+  props:{modelValue:[Number,String]},
+  setup(props,{emit}){
+    return {props}
   },
-  template:'#components'
+  template:'#text-input'
+})
+</script>
+
+<template type="text/x-template" id="checkbox">
+  <div class="form-control">
+    <label class="label cursor-pointer">
+      <span class="label-text"><slot></slot></span> 
+      <input type="checkbox" :checked="props.modelValue" @change="$emit('update:modelValue',!props.modelValue)"
+       class="checkbox checkbox-primary" />
+    </label>
+  </div>
+</template>
+
+<script>
+const Checkbox = defineComponent({
+  props:{modelValue:Boolean},
+  setup(props,{emit}){
+    return {props}
+  },
+  template:'#checkbox'
+})
+</script>
+
+
+<script>
+const Label = defineComponent({
+  template:'<div class="label"><span class="label-text"><slot></slot></span></div>'
+})
+</script>
+
+
+<template type="text/x-template" id="select">
+  <label class="form-control w-full max-w-xs">
+    <div class="label">
+      <span class="label-text"><slot></slot></span>
+    </div>
+    <select :value="modelValue" @change="$emit('update:modelValue',$event.target.value)"
+    class="select select-bordered">
+      <slot name="option"></slot>
+    </select>
+  </label>
+</template>
+
+<script>
+const Select = defineComponent({
+  props:{modelValue:[String,Number]},
+  setup(props,{emit}){
+    const {modelValue} = props
+    return {modelValue}
+  },
+  template:'#select'
 })
 </script>

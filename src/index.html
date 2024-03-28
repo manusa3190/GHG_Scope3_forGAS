@@ -1,47 +1,108 @@
 <template>
-  <h1>一覧</h1>
 
-  <!-- <div ref='データ一覧grid'></div> -->
-  <div id="example"></div>
+  <div class=" pt-4 flex" >
+      <div class="overflow-hidden">
+        <div id="example"></div>
+      </div>
 
-  <button class="btn btn-primary" @click="save">保存</button>
+      <div class="bg-orange-100 h-full w-96 flex-none p-3">
+        <div v-if="!原資材item">資材を選んでください</div>
+
+        <div v-if="原資材item">
+            <div class="flex justify-between items-base">
+              <label class=" text-lg font-bold ">構成</label>
+
+              <button v-if="原資材item['構成コード']" class="btn btn-primary" @click="原資材item['構成コード']=''">再編集</button>
+              <a v-if="!原資材item['構成コード']" class="link link-primary" onclick="my_modal_1.showModal()">登録済コンポーネントから選ぶ</a>
+              <button v-if="!原資材item['構成コード']" class="btn btn-ghost" @click="原資材item = null">キャンセル</button>
+              <button v-if="!原資材item['構成コード']" class="btn btn-primary" @click="save">保存</button>
+            </div>
+
+            <dialog id="my_modal_1" class="modal">
+              <div class="modal-box">
+                <h3 class="font-bold text-lg">構成選択</h3>
+
+                <label>
+                  構成名検索
+                  <input class="input input-sm input-bordered" v-model="構成名検索word">
+                </label>
+
+                <table class="table table-sm">
+                  <tbody>
+                    <tr v-for="構成item of 構成候補items">
+                      <td>{{構成item['構成名']}}</td>
+                      <td>
+                        <button @click="原資材item['構成コード']=構成item['構成コード'];my_modal_1.close()"
+                        class="btn btn-primary btn-xs">選択</button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+
+                <div class="modal-action">
+                  <form method="dialog">
+                    <button class="btn">閉じる</button>
+                  </form>
+                </div>
+              </div>
+            </dialog>
+
+            <Detail :key="原資材item['品目コード']" v-model="原資材item"></Detail>
+        </div>
+
+      </div>
+  </div>
+  
 </template>
 
 <script>
 const index = defineComponent({
+  components:{Detail:detail},
   async setup(){
     // const router = useRouter()
 
-    var hot;
+    var grid;
 
-    onMounted(async()=>{
-        hot = new Handsontable(document.getElementById('example'), {
-          // columns:['品目コード','品名','カテゴリー','担当部署','担当者名'],
-          data: await fetch(),
-          rowHeaders: true,
-          colHeaders: true,
-          height: 'auto',
-          autoWrapRow: true,
-          autoWrapCol: true,
-          licenseKey: 'non-commercial-and-evaluation' // for non-commercial use only
-        });      
+    onMounted(()=>{
+        grid = new Grid({
+            columns:['品目コード','品名','取引先名','担当者名',
+              {id:'構成コード',label:'',formatter: (cell, row) => cell? html(`<div">済</div>`):html(`<div"></div>`)}
+            ],
+            data:Object.values(自所属原資材docs),
+            className:{
+              td:'truncate !px-1 !py-1'
+            }
+
+        })
+        
+        grid.on('rowClick', (...args) => {
+          const {cells} = args[1]
+          const {data:品目コード} = cells[0]
+          原資材item.value = 自所属原資材docs[品目コード]
+        });
+
+        grid.render(document.getElementById('example'))
     })
 
-    await fetch自所属users()
+    if(!自所属users.length){
+      await Promise.all([
+        fetch自所属users(),fetch使いまわし情報docs()
+      ])
+      await fetch自所属原資材docs()
+    }
 
-    const fetch = async()=> new Promise((resolve)=>{
-      const currentUser = 自所属users.find(item=>item['メールアドレス']===currentUserEmail.innerText)
+    const 原資材item = ref()
 
-      google.script.run
-        .withSuccessHandler(res=>resolve(res))
-        .get自所属の原資材(currentUser['所属名'])
+    const 構成名検索word = ref()
+    const 構成候補items = computed(()=>{
+      return Object.values(使いまわし情報docs).filter(item=>item['構成名'].includes(構成名検索word.value))
     })
 
     function save(){
-      console.log(hot.getData())
+      console.log(原資材item)
     }
 
-    return {currentUserEmail,save}
+    return {currentUserEmail,原資材item, 構成名検索word, 構成候補items, save}
   },
   template:'#index'
 })

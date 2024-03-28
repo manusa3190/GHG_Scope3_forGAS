@@ -1,0 +1,43 @@
+<template>
+  <div class="title">割り振り</div>
+
+  <!-- <div ref='データ一覧grid'></div> -->
+  <div id="example"></div>
+
+  <button class="btn btn-primary" @click="save">保存</button>
+</template>
+
+<script>
+const assign = defineComponent({
+  async setup(){
+    // const router = useRouter()
+
+    var hot;
+
+    onMounted(async()=>{
+        const columns = ['品目コード','品名','担当者メールアドレス','担当者名']
+        const data =  Object.values(自所属原資材docs).map(item=>{
+          return columns.map(colName=>item[colName])
+        })
+
+        hot = new Handsontable(document.getElementById('example'), {
+          // columns:columns.map(colName=>({label:{value:colName}})),
+          data:data,
+          rowHeaders: true,
+          colHeaders: columns,
+          height: 'auto',
+          autoWrapRow: true,
+          autoWrapCol: true,
+          licenseKey: 'non-commercial-and-evaluation' // for non-commercial use only
+        });      
+    })
+
+    function save(){
+      console.log(hot.getData())
+    }
+
+    return {currentUserEmail,save}
+  },
+  template:'#assign'
+})
+</script>

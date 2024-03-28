@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
 
     <style type="text/tailwindcss">
-      svg {@apply p-1 w-10 mx-2 hover:cursor-pointer hover:bg-gray-200 active:bg-gray-300 self-center rounded-full}
+      svg {@apply p-1 w-10 mx-2 hover:cursor-pointer hover:bg-gray-200 active:bg-gray-300 self-center rounded-full};
     </style>
 
     <!--handsontable-->
@@ -44,31 +44,72 @@
           .get自所属users()
       })
 
+      var 自所属原資材docs = {}
+      const fetch自所属原資材docs=()=>new Promise((resolve)=>{
+        const currentUser = 自所属users.find(item=>item['メールアドレス']===currentUserEmail.innerText)
+        if(!currentUser)return
 
-      var アイテム一覧 = {}
-      const fetchアイテム一覧=()=>new Promise((resolve)=>{
         google.script.run
           .withSuccessHandler(res=>{
-              Object.entries(JSON.parse(res)).forEach(([key,value])=>{
-                アイテム一覧[key] = value
-              })
-              resolve()
+            自所属原資材docs=res
+            resolve()
           })
-          .getデータ一覧()
+          .get自所属原資材docs(currentUser['所属名'])
       })
+
+      var 使いまわし情報docs = {}
+      const fetch使いまわし情報docs=()=>new Promise((resolve)=>{
+        google.script.run
+          .withSuccessHandler(res=>{
+            使いまわし情報docs=res
+            resolve()
+          })
+          .get使いまわし情報docs()
+      })
+
+      var 素材docs = {}
+      const fetch素材docs=()=>new Promise((resolve)=>{
+        google.script.run
+          .withSuccessHandler(res=>{
+            素材docs=res
+            resolve()
+          })
+          .get素材docs()
+      })
+
+      var マスタitems = {
+        品目分類items:[],
+        素材items:[],
+        成型方法items:[]
+      }
+      const fetchマスタitems =()=>new Promise((resolve)=>{
+        google.script.run
+          .withSuccessHandler(res=>{
+            const {品目分類items, 素材items, 成型方法items } = res
+            マスタitems = {品目分類items, 素材items, 成型方法items }
+            resolve()
+          })
+          .getマスタitems()
+      })
+
+      
     </script>
 
     <?!= include('app') ?>
-    <?!= include('index') ?>
     <?!= include('components') ?>
+    <?!= include('detail') ?>
+    <?!= include('index') ?>
+    <?!= include('composition') ?>
+    <?!= include('assign') ?>
 
     <script>
 
       const router = createRouter({
         history: createWebHashHistory(),
         routes:[
-          { path: '/', name:'index', component: index },
-          { path: '/components', name:'構成マスタ管理', component: components },
+          { path: '/', name:'一覧', component: index },
+          { path: '/component', name:'構成マスタ管理', component: composition },
+          { path: '/assign', name:'記入担当割り振り', component: assign },
         ]
       })
 
