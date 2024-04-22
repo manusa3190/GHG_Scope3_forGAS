@@ -1,7 +1,7 @@
 <template>
 
   <div class=" pt-4 flex" >
-      <div class="overflow-hidden">
+      <!-- <div class="overflow-hidden">
         <div id="example"></div>
       </div>
 
@@ -50,29 +50,33 @@
             <Detail :key="原資材item['品目コード']" v-model="原資材item"></Detail>
         </div>
 
-      </div>
+      </div> -->
+      <div id="example"></div>
+
+      <input @input="setDoc($event.target.value)">
+
+      <button @click="setDoc('ccc')">更新</button>
+
+      <div>{{sample}}</div>
   </div>
   
 </template>
 
 <script>
-const index = defineComponent({
-  components:{Detail:detail},
+const Index = defineComponent({
+  components:{},
   async setup(){
-    // const router = useRouter()
 
     var grid;
 
     onMounted(()=>{
+        console.log(Object.values(自所属原資材docs))
+
         grid = new Grid({
             columns:['品目コード','品名','取引先名','担当者名',
-              {id:'構成コード',label:'',formatter: (cell, row) => cell? html(`<div">済</div>`):html(`<div"></div>`)}
+              // {id:'構成コード',label:'',formatter: (cell, row) => cell? html(`<div">済</div>`):html(`<div"></div>`)}
             ],
             data:Object.values(自所属原資材docs),
-            className:{
-              td:'truncate !px-1 !py-1'
-            }
-
         })
         
         grid.on('rowClick', (...args) => {
@@ -84,25 +88,16 @@ const index = defineComponent({
         grid.render(document.getElementById('example'))
     })
 
-    if(!自所属users.length){
-      await Promise.all([
-        fetch自所属users(),fetch使いまわし情報docs()
-      ])
-      await fetch自所属原資材docs()
-    }
+    const {自所属users} = await useUsers()
+    const {自所属原資材docs,使いまわし情報docs,setDoc} = await useTables()
 
     const 原資材item = ref()
-
-    const 構成名検索word = ref()
-    const 構成候補items = computed(()=>{
-      return Object.values(使いまわし情報docs).filter(item=>item['構成名'].includes(構成名検索word.value))
-    })
 
     function save(){
       console.log(原資材item)
     }
 
-    return {currentUserEmail,原資材item, 構成名検索word, 構成候補items, save}
+    return {currentUserEmail,原資材item, save, setDoc}
   },
   template:'#index'
 })

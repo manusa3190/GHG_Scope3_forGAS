@@ -18,9 +18,14 @@
       <div class="flex-none hidden lg:block">
         <ul class="menu menu-horizontal">
           <!-- Navbar menu content here -->
-          <li><a  @click="openData">スプレッドシートを開く</a></li>
-          <li><a  @click="openScript">スクリプトを開く</a></li>
+            <li v-for="r of routes">
+              <!-- <a @click="$router.push(`${r.path}`)">{{r.name}}</a> -->
+            </li>
         </ul>
+      </div>
+
+      <div>
+        <button class="btn btn-primary" @click="更新" >更新</button>
       </div>
     </nav>
 
@@ -60,16 +65,12 @@
 </template>
 
 <script>
-const app = defineComponent({
+const App = defineComponent({
   setup(){
-    const openData = window.open()
-
-    const openScript= window.open()
-
     const router = useRouter()
     const routes = router.getRoutes()
 
-    return {currentUserEmail, openData, openScript, routes}
+    return {currentUserEmail, routes}
   },
   template:`#app`
 })

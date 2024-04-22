@@ -2,9 +2,10 @@
 <html data-theme="cmyk">
   <head>
     <base target="_top">
-    <!-- tailwind and daisyui -->
-    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.7.3/dist/full.min.css" rel="stylesheet" type="text/css" />    
+    <!-- tailwind, typography and daisyui -->    
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/@tailwindcss/typography@latest/dist/typography.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.7.3/dist/full.min.css" rel="stylesheet" type="text/css" />
 
     <style type="text/tailwindcss">
       svg {@apply p-1 w-10 mx-2 hover:cursor-pointer hover:bg-gray-200 active:bg-gray-300 self-center rounded-full};
@@ -19,104 +20,69 @@
     <link href="https://unpkg.com/gridjs/dist/theme/mermaid.min.css" rel="stylesheet" />  
 
   </head>
-  <body>
-    <div id='currentUserEmail' class=" hidden"><?= currentUserEmail ?></div>
+  <body class="">
+    <div id="currentUserEmail" hidden><?= currentUserEmail ?></div>
     <div id="vue-app"></div>
 
     <!-- vue3 -->
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <!-- vue-router -->
     <script src="https://unpkg.com/vue-router@4"></script>
-    
+
+    <!-- pinia（vue-demiが必要） -->
+    <script src="https://unpkg.com/vue-demi"></script>
+    <script src="https://unpkg.com/pinia"></script>
+
+    <!-- vee-validate(Vueの後に記述) -->
+    <!-- <script src='https://cdnjs.cloudflare.com/ajax/libs/vee-validate/4.12.6/vee-validate.js'></script> -->
+    <!-- yup -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/yup@1.4.0/index.min.js"></script> -->
+    <!-- <script type="module">
+      import yup from 'https://cdn.jsdelivr.net/npm/yup@1.4.0/+esm'
+    </script> -->
+
+
     <script>
-      const {defineComponent,ref,reactive, computed, onMounted, watch} = Vue
+      const { defineComponent,ref,reactive, computed, onMounted, watch} = Vue
       const { useRoute, useRouter, createRouter, createWebHashHistory} = VueRouter
+      const { defineStore, createPinia } = Pinia;
 
       const {Grid,html,useSelector} = gridjs
 
-      var 自所属users = []
-      const fetch自所属users=()=>new Promise((resolve)=>{
-        google.script.run
-          .withSuccessHandler(res=>{
-            自所属users = res
-            resolve()
-          })
-          .get自所属users()
-      })
-
-      var 自所属原資材docs = {}
-      const fetch自所属原資材docs=()=>new Promise((resolve)=>{
-        const currentUser = 自所属users.find(item=>item['メールアドレス']===currentUserEmail.innerText)
-        if(!currentUser)return
-
-        google.script.run
-          .withSuccessHandler(res=>{
-            自所属原資材docs=res
-            resolve()
-          })
-          .get自所属原資材docs(currentUser['所属名'])
-      })
-
-      var 使いまわし情報docs = {}
-      const fetch使いまわし情報docs=()=>new Promise((resolve)=>{
-        google.script.run
-          .withSuccessHandler(res=>{
-            使いまわし情報docs=res
-            resolve()
-          })
-          .get使いまわし情報docs()
-      })
-
-      var 素材docs = {}
-      const fetch素材docs=()=>new Promise((resolve)=>{
-        google.script.run
-          .withSuccessHandler(res=>{
-            素材docs=res
-            resolve()
-          })
-          .get素材docs()
-      })
-
-      var マスタitems = {
-        品目分類items:[],
-        素材items:[],
-        成型方法items:[]
-      }
-      const fetchマスタitems =()=>new Promise((resolve)=>{
-        google.script.run
-          .withSuccessHandler(res=>{
-            const {品目分類items, 素材items, 成型方法items } = res
-            マスタitems = {品目分類items, 素材items, 成型方法items }
-            resolve()
-          })
-          .getマスタitems()
-      })
-
-      
+      // const {useForm, useFieldArray} = VeeValidate
     </script>
 
-    <?!= include('app') ?>
-    <?!= include('components') ?>
-    <?!= include('detail') ?>
-    <?!= include('index') ?>
-    <?!= include('composition') ?>
-    <?!= include('assign') ?>
+    <?!= include('App') ?>
+
+    <?!= include('stores/useUsers') ?>
+    <?!= include('stores/useMasters') ?>
+    <?!= include('stores/useState') ?>
+    <?!= include('stores/useTables') ?>
+
+
+    <?!= include('components/Index') ?>
+    <?!= include('components/Detail') ?>
+
+    <?!= include('views/Index') ?>
+    <!--<?!= include('views/Composition') ?>
+    <?!= include('views/Assign') ?> -->
 
     <script>
 
       const router = createRouter({
         history: createWebHashHistory(),
         routes:[
-          { path: '/', name:'一覧', component: index },
-          { path: '/component', name:'構成マスタ管理', component: composition },
-          { path: '/assign', name:'記入担当割り振り', component: assign },
+          { path: '/', name:'一覧', component: Index },
+          // { path: '/component', name:'構成マスタ管理', component: Composition },
+          // { path: '/assign', name:'記入担当割り振り', component: Assign },
         ]
       })
 
       Vue.createApp({
-        components:{app},
-        template:`<app />`
+            components:{App},
+            template:`<App />`
         })
+        .use(createPinia())
         .use(router)
         .mount('#vue-app')
     </script>

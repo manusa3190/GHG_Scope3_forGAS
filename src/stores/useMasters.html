@@ -1,0 +1,24 @@
+<script>
+const useMaster = defineStore("master", async()=>{
+  const 品目分類items = ref([])
+  const 素材items = ref([]) 
+  const 製法items = ref([])
+
+  const fetchマスタ =()=>new Promise((resolve)=>{
+    google.script.run
+      .withSuccessHandler(res=>{
+        品目分類items.value = res['品目分類items']
+        素材items.value = res['素材items']
+        製法items.value = res['製法items']
+        resolve()
+      })
+      .getマスタitems()
+  })
+
+  if(!品目分類items.value.length){
+    await fetchマスタ()
+  }
+
+  return {品目分類items, 素材items, 製法items, fetchマスタ}
+})
+</script>

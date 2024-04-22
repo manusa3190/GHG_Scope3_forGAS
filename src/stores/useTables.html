@@ -1,0 +1,45 @@
+<script>
+const useTables = defineStore('useTables', async() => {
+  
+  const fetch自所属原資材docs=()=>new Promise((resolve)=>{
+    google.script.run
+      .withSuccessHandler(res=>{
+        自所属原資材docs.value=res
+        resolve()
+      })
+      .get自所属原資材docs()
+  })
+        
+  const fetch使いまわし情報docs=()=>new Promise((resolve)=>{
+    google.script.run
+      .withSuccessHandler(res=>{
+        使いまわし情報docs.value=res
+        resolve()
+      })
+      .get使いまわし情報docs()
+  })
+
+  const 自所属原資材docs = ref(await fetch自所属原資材docs())
+  const 使いまわし情報docs = ref(await fetch使いまわし情報docs())
+
+  const set原資材doc=(data)=>{
+    google.script.run
+      .withSuccessHandler(res=>{
+        自所属原資材docs.value[res['品目コード']]=res
+        resolve()
+      })
+      .set自所属原資材doc()
+  }
+
+  const set使いまわし情報doc=(data)=>{
+      google.script.run
+      .withSuccessHandler(res=>{
+        使いまわし情報docs.value[res['構成コード']]=res
+        resolve()
+      })
+      .set使いまわし情報doc()
+  }
+
+  return {自所属原資材docs, 使いまわし情報docs, set原資材doc, set使いまわし情報doc}
+})
+</script>

@@ -3,11 +3,13 @@
   <div>{{currentUserEmail.innerText}}</div>
 
   <!-- <div ref='データ一覧grid'></div> -->
+  {{sample}}
 </template>
 
 <script>
-const composition = defineComponent({
+const Composition = defineComponent({
   async setup(){
+    const {自所属原資材docs,使いまわし情報docs, sample,setDoc} = await useTable()
     // const router = useRouter()
     // const データ一覧grid = ref()
 
@@ -53,7 +55,7 @@ const composition = defineComponent({
     // }
 
     // return {データ一覧grid}
-    return {currentUserEmail}
+    return {currentUserEmail, sample}
   },
   template:'#composition'
 })

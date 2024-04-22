@@ -55,6 +55,7 @@ class Test {
           return val1.every(v1=>val2.includes(v1)) && val2.every(v2=>val1.includes(v2))
         case 'String':
         case 'Number':
+        case 'Boolean':
           return val1===val2
         case 'Null':
           return val2===null
@@ -63,6 +64,7 @@ class Test {
         case 'Object':
           return Object.keys(val1).every(key=>isEqual(val1[key],val2[key]))
       }
+      console.log(val1Type)
     }
 
     this.tests.forEach(({description,callback,option})=>{
