@@ -1,11 +1,17 @@
 <script>
-const useTables = defineStore('useTables', async() => {
+const useTables = defineStore('useTables', () => {
+  const 自所属原資材docs = ref({})
+  const 使いまわし情報docs = ref({})
+
   
   const fetch自所属原資材docs=()=>new Promise((resolve)=>{
     google.script.run
       .withSuccessHandler(res=>{
         自所属原資材docs.value=res
         resolve()
+      })
+      .withFailureHandler(err=>{
+        console.log(113)
       })
       .get自所属原資材docs()
   })
@@ -19,8 +25,6 @@ const useTables = defineStore('useTables', async() => {
       .get使いまわし情報docs()
   })
 
-  const 自所属原資材docs = ref(await fetch自所属原資材docs())
-  const 使いまわし情報docs = ref(await fetch使いまわし情報docs())
 
   const set原資材doc=(data)=>{
     google.script.run
@@ -40,6 +44,6 @@ const useTables = defineStore('useTables', async() => {
       .set使いまわし情報doc()
   }
 
-  return {自所属原資材docs, 使いまわし情報docs, set原資材doc, set使いまわし情報doc}
+  return {自所属原資材docs, 使いまわし情報docs, fetch自所属原資材docs, fetch使いまわし情報docs, set原資材doc, set使いまわし情報doc}
 })
 </script>

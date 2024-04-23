@@ -47,6 +47,10 @@ class Sheet {
         if(typeof(value)==='string' && value.includes(';')){
           value = value.split(';')
         }
+
+        if(value instanceof Date){
+          value = value.toUTCString()
+        }
         return Object.assign(item,{[columnName]:value})
       },{})
     })

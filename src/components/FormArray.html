@@ -1,0 +1,130 @@
+<script>
+
+export default defineComponent({
+  props:{種別コード:String},
+  setup(props){
+      const { 種別コード} = props
+
+      const { remove, push, update, fields } = useFieldArray(() => '構成', undefined );
+
+      const edittingIdx = ref(-1)
+
+      const 構成temp = {構成コード:'',IDEA製品コード:'',IDEA製品名:'',使用量:0,使用量単位:'g'}
+
+      const {values:編集中構成, errors, setFieldValue, resetForm } = useForm({
+              initialValues:{構成コード:'',IDEA製品コード:'',IDEA製品名:'',使用量:0,使用量単位:'g'},
+              validationSchema:{
+                  構成コード:yup.string(),
+                  IDEA製品コード:yup.string(),
+                  IDEA製品名:yup.string(),
+                  使用量:yup.number().min(0,'0以上を入力ください'),
+                  使用量単位:yup.string().oneOf(['μm','μg','g','%'])
+              }
+      })
+
+      function 構成に反映(){
+          const i = edittingIdx.value
+          update(i,{...編集中構成})
+          resetForm()
+      }
+
+
+      const {種別マスタdocs, IDEAマスタv2items} = useMasters()
+      const 検索word = ref('')
+      const 推奨のみ = ref(true)
+      const 候補のみ = ref(true)
+
+      const 候補IDEAマスタitems = computed(() => {
+          if(!種別コード)return[]
+
+          let {候補小分類コードリスト} = 種別マスタdocs[種別コード]
+          return IDEAマスタv2items
+              .filter(item=> 候補のみ.value? 候補小分類コードリスト.includes(item['小分類コード']):true)
+              .filter(item=> 推奨のみ.value? item['推奨フラグ']:true)
+              .filter(item=> 検索word.value? item['IDEA製品名'].includes(検索word.value):true)
+              .sort((a,b)=>a['選択回数']>b['選択回数']? 1:-1)
+      })
+
+      return {remove, push, update, fields, edittingIdx, 構成temp,
+        編集中構成, errors, setFieldValue, resetForm,
+        構成に反映, 検索word, 推奨のみ, 候補のみ, 候補IDEAマスタitems,
+        useState
+      }
+  }
+})
+
+</script>
+
+<template>
+    <table class=" table table-sm">
+        <tbody>
+            <tr v-for="(f,i) of fields">
+                <td>
+                    <button type="button" class="link max-w-36 truncate" onclick="my_modal_1.showModal()" @click="edittingIdx=i">
+                      {{ f.value['IDEA製品名'] || '選択' }}
+                    </button>
+                </td>
+
+                <td>{{ f.value['使用量'] }}</td>
+                <td>{{ f.value['使用量単位'] }}</td>
+
+                <td v-if="useState().isEdit">
+                    <button type="button" @click="remove(i)" class="btn btn-warning btn-xs truncate">削除</button>
+                </td>
+            </tr>
+        </tbody>
+
+        <button type="button" @click="push(構成temp)" class="btn btn-ghost btn-sm text-error "><span class="pl-5 pr-1">+</span>追加</button>
+    </table>
+    
+    <dialog id="my_modal_1" class="modal">
+        <div class="modal-box">
+            <h3 class="font-bold text-lg mt-0">素材を選択</h3>
+
+            <div class="">
+                <div class="flex space-x-3">
+                    <input v-model="検索word" class="input input-sm input-bordered">
+
+                    <label class="label w-fit space-x-1">
+                        <input type="checkbox" v-model="推奨のみ" class=" checkbox checkbox-sm">
+                        <span class=" label-text">推奨のみ</span>
+                    </label>
+
+                    <label class="label w-fit space-x-1">
+                        <input type="checkbox" v-model="候補のみ" class=" checkbox checkbox-sm">
+                        <span class=" label-text">候補のみ</span>
+                    </label>
+                </div>
+
+                <ul class=" border h-60 overflow-y-auto">
+                    <li v-for="(item,i) of 候補IDEAマスタitems"  :key="i"
+                    @click="setFieldValue('IDEA製品コード',item['IDEA製品コード']);setFieldValue('IDEA製品名',item['IDEA製品名'])"
+                    class="flex w-full cursor-pointer" :class="{'bg-gray-300': 編集中構成.IDEA製品コード===item['IDEA製品コード']}"
+                    >
+                        <div class=" truncate">{{ item['IDEA製品名'] }}</div>
+                        <div class="flex-1"></div>
+                    </li>
+                </ul>
+            </div>
+
+            <div>
+                <label class="label inline">
+                    <span class=" label-text">使用量</span>
+                    <input type="number"
+                    :value="編集中構成.使用量" @change="setFieldValue('使用量',Number($event.target.value))"
+                    class=" input input-sm input-bordered max-w-20"> 
+                </label>
+
+                <select class="select select-sm select-bordered w-18" 
+                :value="編集中構成.使用量単位" @change="setFieldValue('使用量単位',$event.target.value)">
+                    <option v-for="item of ['μm','μg','g','%']" :key="item" :value="item">{{ item }}</option>
+                </select>
+            </div>
+
+            <form method="dialog" class="modal-action space-x-3">
+                <button @click="構成に反映" class="btn btn-primary">反映</button>
+                <button class="btn">閉じる</button>
+            </form>
+        </div>
+    </dialog>
+</template>

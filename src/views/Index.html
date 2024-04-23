@@ -1,95 +1,92 @@
 <template>
-
-  <div class=" pt-4 flex" >
-      <!-- <div class="overflow-hidden">
-        <div id="example"></div>
+  <div class="flex justify-between h-full w-screen">
+    <!-- 左側 -->
+    <div>
+      <div class=" overflow-x-scroll p-2">
+        <table id="index" class=" border table table-sm w-[500px]"></table> 
       </div>
+    </div>
 
-      <div class="bg-orange-100 h-full w-96 flex-none p-3">
-        <div v-if="!原資材item">資材を選んでください</div>
+    <!-- 右側ウィンドウ -->
+    <div class="bg-orange-100 h-full w-96 flex-none p-3">
+      <div v-if="!原資材item" class="">原資材を選んでください</div>
 
-        <div v-if="原資材item">
-            <div class="flex justify-between items-base">
-              <label class=" text-lg font-bold ">構成</label>
+      <div v-else class=" h-full flex flex-col">
 
-              <button v-if="原資材item['構成コード']" class="btn btn-primary" @click="原資材item['構成コード']=''">再編集</button>
-              <a v-if="!原資材item['構成コード']" class="link link-primary" onclick="my_modal_1.showModal()">登録済コンポーネントから選ぶ</a>
-              <button v-if="!原資材item['構成コード']" class="btn btn-ghost" @click="原資材item = null">キャンセル</button>
-              <button v-if="!原資材item['構成コード']" class="btn btn-primary" @click="save">保存</button>
-            </div>
+        <div class="flex justify-between">
+          <label class=" text-lg font-bold ">構成</label>
 
-            <dialog id="my_modal_1" class="modal">
-              <div class="modal-box">
-                <h3 class="font-bold text-lg">構成選択</h3>
+          <div v-if="!useState().isEdit">
+              <button class="btn btn-primary" @click="useState().$patch({isEdit:true})">再編集</button>
+          </div>
 
-                <label>
-                  構成名検索
-                  <input class="input input-sm input-bordered" v-model="構成名検索word">
-                </label>
+          <div v-else class="flex">
+              <button class=" btn btn-primary" @click="save()">保存</button>
+              <button class=" btn btn-ghost" @click="useState().$patch({isEdit:false})">キャンセル</button>
+          </div>
 
-                <table class="table table-sm">
-                  <tbody>
-                    <tr v-for="構成item of 構成候補items">
-                      <td>{{構成item['構成名']}}</td>
-                      <td>
-                        <button @click="原資材item['構成コード']=構成item['構成コード'];my_modal_1.close()"
-                        class="btn btn-primary btn-xs">選択</button>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-
-                <div class="modal-action">
-                  <form method="dialog">
-                    <button class="btn">閉じる</button>
-                  </form>
-                </div>
-              </div>
-            </dialog>
-
-            <Detail :key="原資材item['品目コード']" v-model="原資材item"></Detail>
         </div>
 
-      </div> -->
-      <div id="example"></div>
+        <!-- <div>
+          <RecordComposition v-if="!useState().isEdit" :原資材item="原資材item"></RecordComposition>
+          <SelectComposition v-if="useState().isEdit"  @select="Object.assign(原資材item,$event)"></SelectComposition>        
+        </div> -->
+        <form>
 
-      <input @input="setDoc($event.target.value)">
-
-      <button @click="setDoc('ccc')">更新</button>
-
-      <div>{{sample}}</div>
+          <Detail :key="原資材item? 原資材item['品目コード']:'0'" :原資材item="原資材item"></Detail>
+        </form>
+        
+      </div>
+    </div>
   </div>
-  
 </template>
 
 <script>
-const Index = defineComponent({
-  components:{},
+
+export default defineComponent({
+  components:{RecordComposition, SelectComposition, Detail},
   async setup(){
 
     var grid;
 
-    onMounted(()=>{
-        console.log(Object.values(自所属原資材docs))
+    onMounted(async()=>{
+        const 自所属原資材items = Object.values( useTables().自所属原資材docs)
+
+        const columns = ['品目コード','品名','取引先名',
+          {id:'担当者名', name:'担当者名', formatter: (cell, row) => cell? html(`<div>${cell}</div>`):html(`<div>担当者なし</div>`)},
+          {id:'構成コード',hidden:true},
+          {id:'構成コード',name:'登録',formatter: (cell, row) => cell? html(`<div>済</div>`):html(`<div></div>`)}
+        ]
 
         grid = new Grid({
-            columns:['品目コード','品名','取引先名','担当者名',
-              // {id:'構成コード',label:'',formatter: (cell, row) => cell? html(`<div">済</div>`):html(`<div"></div>`)}
-            ],
-            data:Object.values(自所属原資材docs),
+          columns,
+          data:自所属原資材items,
+          className:{
+            td:'max-w-52 truncate'
+          },
+          sort:true,    
         })
-        
-        grid.on('rowClick', (...args) => {
-          const {cells} = args[1]
-          const {data:品目コード} = cells[0]
-          原資材item.value = 自所属原資材docs[品目コード]
-        });
 
-        grid.render(document.getElementById('example'))
+        grid.on('rowClick',(...args)=>{
+          const {cells} = args[1]
+          const 品目コード = cells[columns.findIndex(c=>c==='品目コード'||c.id==='品目コード')].data
+          const {自所属原資材docs} = useTables()
+          原資材item.value = {...自所属原資材docs[品目コード]}
+
+          useState().$patch({isEdit:!原資材item.value.構成コード})
+        })
+
+        grid.render(document.getElementById('index'))
     })
 
-    const {自所属users} = await useUsers()
-    const {自所属原資材docs,使いまわし情報docs,setDoc} = await useTables()
+    const {get自所属users} = useUsers()
+    const {fetch自所属原資材docs, fetch使いまわし情報docs} = useTables()
+    const {fetchマスタ} = useMasters()
+
+    await Promise.all([
+      get自所属users(), fetch自所属原資材docs(), fetch使いまわし情報docs(), fetchマスタ()
+    ])
+
 
     const 原資材item = ref()
 
@@ -97,8 +94,8 @@ const Index = defineComponent({
       console.log(原資材item)
     }
 
-    return {currentUserEmail,原資材item, save, setDoc}
-  },
-  template:'#index'
+    return {currentUserEmail,原資材item, save, useState}
+  }
 })
+
 </script>

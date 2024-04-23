@@ -1,5 +1,7 @@
 <script>
-const useUsers = defineStore('useUsers', async() => {
+const useUsers = defineStore('useUsers', () => {
+
+  const 自所属users = ref([])
 
   const get自所属users= async()=> new Promise(async(resolve)=>{
 
@@ -8,13 +10,13 @@ const useUsers = defineStore('useUsers', async() => {
     }
 
     if(localStorage.length){
-      resolve(
-        [...Array(localStorage.length)].map((_,i)=>{
+
+      自所属users.value = [...Array(localStorage.length)].map((_,i)=>{
           const key = localStorage.key(i)
           const item = JSON.parse(localStorage.getItem(key))
           return item
-        })
-      )
+      })
+      resolve()
     }else{
 
     }
@@ -31,8 +33,6 @@ const useUsers = defineStore('useUsers', async() => {
       .get自所属users()    
   })
 
-  const 自所属users = ref(await get自所属users())
-
-  return {自所属users, fetch自所属users}
+  return {自所属users, get自所属users, fetch自所属users}
 })
 </script>

@@ -1,62 +1,135 @@
-<template>
-  <h1>構成マスタ管理</h1>
-  <div>{{currentUserEmail.innerText}}</div>
-
-  <!-- <div ref='データ一覧grid'></div> -->
-  {{sample}}
-</template>
-
 <script>
-const Composition = defineComponent({
-  async setup(){
-    const {自所属原資材docs,使いまわし情報docs, sample,setDoc} = await useTable()
-    // const router = useRouter()
-    // const データ一覧grid = ref()
 
-    // onMounted(()=>{
-    //   const grid = new Grid({
-    //     // columns: [
-    //     //   {
-    //     //     id:"品目id",
-    //     //     hidden:true
-    //     //   },{
-    //     //     name:"品名",
-    //     //     formatter:(cell,row)=>html(`<div class="text-end font-bold text-lg">${cell}</div>`)
-    //     //   }
-    //     // ],
-    //     data: Object.values(データ一覧),
-    //     style:{
-    //       tr:(row,rowIndex)=>{
-    //         return rowIndex === 1? {className:'selected'}:{}
-    //       }
-    //     },
-    //     className:{
-    //       th:'!p-1 text-center',
-    //       td:'!bg-inherit !py-0.5 text-center whitespace-nowrap',
-    //     },
-    //     // sort:true,
-    //     // search:true,
-    //     fixedHeader:true,
-    //     height:"800px"
+defineComponent({
+  components:{Detail},
+  setup(){
+    const {自所属原資材docs, 使いまわし情報docs, fetch自所属原資材docs, fetch使いまわし情報docs, set原資材doc, set使いまわし情報doc} = useTables()
 
-    //   }).render(データ一覧grid.value);
+    const {自所属users} = useUsers()
 
-    //   // 行をクリックすると詳細に飛ぶ
-    //   grid.on('rowClick',(...args) => {
-    //     const {cells} = args[1]
-    //     console.log(cells)
-    //     const データid = cells[0].data
-    //     router.push(String(データid))            
-    //   })
-    // })
+    const 構成item = ref(null)
+    watch(構成item,()=> state.$patch({isEdit:!構成item.value}))
 
-    // if(!Object.keys(データ一覧).length){
-    //   await fetchデータ一覧()
-    // }
+    var grid
 
-    // return {データ一覧grid}
-    return {currentUserEmail, sample}
-  },
-  template:'#composition'
+    onMounted(()=>{
+        const columns = ['構成コード','構成名','在庫単位','単位重量','製法']
+
+        grid = new Grid({
+            columns,
+            data:[],
+            className:{
+                td:'max-w-52 truncate'
+            },
+        })
+
+        grid.on('rowClick',(...args)=>{
+            const {cells} = args[1]
+            const 構成コード = cells[columns.findIndex(c=>c==='構成コード'||c.id==='構成コード')].data
+            構成item.value = {...使いまわし情報docs[構成コード]}
+        })
+
+        grid.render(document.getElementById('grid-elem'))
+    })
+
+    const query = reactive({
+        word:'',
+        onlyMe:true,
+        onlyMyDiv:true
+    })
+
+    watch(query,()=>{
+        if(!grid)return
+        const {word, onlyMe, onlyMyDiv} = query
+        let 構成items = Object.values(使いまわし情報docs)
+        if(onlyMe){
+            構成items = 構成items.filter(構成item=>構成item['作成者メールアドレス']===currentUser['メールアドレス'])
+        }
+        if(onlyMyDiv){
+            構成items = 構成items.filter(構成item=>構成item['作成者所属名']===currentUser['所属名'])
+        }
+        if(word){
+            構成items = 構成items.filter(構成item=>構成item['構成名'].includes(word))
+        }
+
+        grid.updateConfig({
+            data:構成items
+        }).forceRender()
+    },{ immediate: true })
+
+
+    async function save(){
+        await set構成(構成item.value)
+    }
+
+    return {query, 構成item, useState, }
+  }
 })
+
 </script>
+
+<template>
+<div class="flex justify-between h-full w-screen">
+    <!-- 左側 -->
+    <div class="flex-1">
+        <div>
+            <div class="border grid grid-cols-6">
+
+                <label class="form-control w-full max-w-xs col-span-6">
+                    <div class=" label">
+                        <span class=" label-text">構成名</span>
+                    </div>
+                    <input class=" input input-sm input-bordered" v-model="query.word">
+                </label>
+
+                <label class=" label justify-start cursor-pointer col-span-3">
+                    <input type="checkbox" class=" checkbox checkbox-sm" v-model="query.onlyMe">                    
+                    <span class="label-text">自分が登録した構成のみ表示</span>
+                </label>
+
+                <label class=" label justify-start cursor-pointer col-span-3">
+                    <input type="checkbox" class=" checkbox checkbox-sm" v-model="query.onlyMyDiv">                    
+                    <span class="label-text">自部署が登録した構成のみ表示</span>
+                </label>
+
+            </div>
+        </div>
+
+        <div class="my-5 overflow-x-scroll border">
+            <div id="grid-elem" class=" border table"></div>
+        </div>
+    </div>
+
+    <!-- 右側 -->
+    <div class="bg-orange-100 h-full w-96 flex-none p-3">
+        <div v-if="!構成item" class="">構成を選んでください</div>
+
+        <div v-else class=" h-full flex flex-col">
+
+            <div class="flex justify-between">
+                <label class=" text-lg font-bold ">構成</label>
+
+                <div v-if="!useState().isEdit">
+                    <button class="btn btn-primary" @click="useState().$patch({isEdit:true})">再編集</button>
+                </div>
+
+                <div v-else class="flex">
+                    <button class=" btn btn-primary" @click="save()">保存</button>
+                    <button class=" btn btn-ghost" @click="useState().$patch({isEdit:false})">キャンセル</button>
+                </div>
+
+            </div>
+
+            <div>
+                <h2>構成名</h2>
+                {{ 構成item['構成名'] }}
+            </div>
+
+            <Detail :原資材item="構成item"></Detail>
+            
+        </div>
+
+    </div>
+
+</div>
+</template>

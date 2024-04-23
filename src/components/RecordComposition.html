@@ -1,0 +1,68 @@
+<script>
+
+defineComponent({
+  setup(props){
+    const {原資材item} = props
+
+    const 構成名 = ref('')
+
+    const dialog = ref(null)
+
+    function record(){
+        dialog.value.close()
+    }
+
+    return {構成名, dialog, record}
+  }
+})
+
+</script>
+
+<template>
+    <button class=" link " @click="dialog.showModal()">この構成を登録</button>
+
+    <dialog class="modal" ref="dialog">
+    <div class="modal-box">
+        <h3 class="font-bold text-lg">この構成を登録します</h3>
+ 
+        <p class="py-4">わかりやすい名前をつけてください</p>
+
+        <input class="input input-sm input-bordered " v-model="構成名">
+
+        <div class=" border m-2 p-2 flex flex-col space-y-3">
+            <div class=" card-title">構成情報</div>
+
+            <div class="form-control max-w-[150px]">
+                <label class="label ">
+                    <span class="label-text">容リ法対象</span> 
+                    <input type="checkbox" :checked="原資材item['容リ法対象フラグ']" class="checkbox checkbox-sm disabled:opacity-100" disabled/>
+                </label>
+            </div>
+
+            <div class="form-control max-w-[150px]">
+                <label class="label ">
+                    <span class="label-text">プラスチック</span> 
+                    <input type="checkbox" :checked="原資材item['プラスチックフラグ']" class="checkbox checkbox-sm disabled:opacity-100" disabled/>
+                </label>
+            </div>
+
+
+            <dl>
+                <dt>構成</dt>
+                <table>
+                    <tr v-for="構成 of 原資材item['構成']">
+                        <td>{{構成['IDEA製品名']}}</td>
+                        <td>{{構成['使用量']}}</td>
+                        <td>{{構成['使用量単位']}}</td>
+                    </tr>
+                </table>
+            </dl>
+        </div>
+
+        <div class="modal-action space-x-3">
+            <button class="btn btn-primary" @click="record">登録</button>
+            <button class="btn" @click="dialog.close()">閉じる</button>
+        </div>
+    </div>
+    </dialog>
+</template>

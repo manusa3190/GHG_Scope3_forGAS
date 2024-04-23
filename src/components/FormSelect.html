@@ -1,0 +1,33 @@
+<script>
+
+defineComponent({
+  props:{
+    name: String,
+    type: String,
+    items: Array,
+    sm: Boolean
+  },
+  setup(props){
+    const {name, type, items, sm} = props
+    const { handleChange, value, handleBlur, errorMessage, meta } = useField(() => name+'コード',undefined);
+
+    return {name, type, items, sm, handleChange, value, handleBlur, errorMessage, meta, useState}
+  }
+})
+
+</script>
+
+<template>
+    <select class="select disabled:bg-inherit disabled:text-black appearance-none"
+    :class="sm? 'select-sm max-w-20':''"
+    :value="value" @change="handleChange"
+    :disabled="!useState().isEdit">
+        <option
+            v-for="(item, i) of items"
+            :key="i"
+            :value="item[name+'コード']"
+        >
+            {{ item[name+'名'] }}
+        </option>
+    </select>
+</template>

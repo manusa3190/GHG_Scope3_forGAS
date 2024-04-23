@@ -1,0 +1,53 @@
+<script>
+defineComponent({
+  setup(props){
+    const dialog = ref(null)
+
+    const {使いまわし情報docs} = useTable()
+
+    const 構成名検索word = ref('')
+
+    const 構成候補items = computed(()=>{
+        return Object.values(使いまわし情報docs).filter(item=>item['構成名'].includes(構成名検索word.value))
+    })
+
+    function set構成to原資材(){
+
+    }
+
+    return {dialog, 使いまわし情報docs, 構成名検索word, 構成候補items, set構成to原資材}
+  }
+})
+
+</script>
+
+<template>
+  <button class=" link " @click="dialog.showModal()">登録済み構成から選択</button>
+
+  <dialog class="modal" ref="dialog">
+      <div class="modal-box">
+          <h3 class="font-bold text-lg">構成選択</h3>
+
+          <label>
+              構成名検索
+              <input class="input input-sm input-bordered" v-model="構成名検索word">
+          </label>
+
+          <table class="table table-sm">
+              <tbody>
+              <tr v-for="構成item of 構成候補items" :key="構成item['構成コード']">
+                  <td>{{構成item['構成名']}}</td>
+                  <td>
+                  <button @click="set構成to原資材();dialog.close()"
+                  class="btn btn-primary btn-xs">選択</button>
+                  </td>
+              </tr>
+              </tbody>
+          </table>
+
+          <div class="modal-action">
+              <button class="btn btn-ghost" @click="dialog.close()">閉じる</button>
+          </div>
+      </div>
+  </dialog>
+</template>

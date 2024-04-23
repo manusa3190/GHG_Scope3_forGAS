@@ -1,127 +1,83 @@
 <template>
-  <div class="text-lg font-bold">{{原資材item['品名']}}</div>
+  <div class="space-y-8 prose">
 
-  <label class="form-control w-full max-w-xs">
-    <Label v-if="isEdit">どのタイプに当てはまりますか</Label>
-    <Label v-else>品目分類</Label>
-    <select v-model="selected品目分類" class="select select-bordered" :class="{'ghost':!isEdit}" :disabled="!isEdit">
-      <option v-for="品目分類item of 品目分類items" :value="品目分類item">{{品目分類item['品目分類名']}}</option>
-    </select>
-  </label>
+    <div class="">
+      <h2>種別</h2>
+      <div class="pl-6">
+          <FormSelect name="種別" :items="種別マスタitems" ></FormSelect>
+      </div>
+    </div>
 
-  <div class="text-lg font-bold">{{原資材item['在庫単位']}}</div>
+    <div class="">
+      <h2>関連法規</h2>
+      <div class="pl-6">
+          <FormCheckbox name="容リ法対象フラグ" />
+          <FormCheckbox name="プラスチックフラグ" />
+      </div>
+    </div>
 
-  <Checkbox v-model="原資材item['容リ法対象']">容リ法対象</Checkbox>
+    <div class="">
+      <h2>IDEA換算設定</h2>
 
-  <Checkbox v-model="原資材item['プラスチック']">プラスチック</Checkbox>
-
-  <TextInput v-model="原資材item['単位重量']">単位重量</TextInput>
-
-  <Select v-model="原資材item['成型方法']">
-    成型方法
-    <template #option>
-       <option v-for="成型方法item of 成型方法items" :value="成型方法item['成型方法コード']">{{成型方法item['成型方法名']}}</option>
-    </template>
-  </Select>
-
-  <label v-if="原資材item['成型方法']" class="form-control w-full max-w-xs">
-    <Label>成型方法</Label>
-    <select v-model="原資材item['成型方法']" class="select select-bordered">
-      <option v-for="成型方法item of 成型方法items" :value="成型方法item['成型方法コード']">{{成型方法item['成型方法名']}}</option>
-    </select>
-  </label>
-
-  <div v-if="selected品目分類">
-    <label class="font-bold text-lg">構成</label>
-
-    <div v-if="!selected品目分類['構成分割']">
-      <label class="form-control w-full max-w-xs">
-        <div class="label">
-          <span class="label-text">素材として最も近いものを選んでください</span>
-        </div>
-        <select v-model="原資材item['構成'][0]" class="select select-bordered">
-          <option v-for="素材item of 選択可能素材items" :value="素材item">{{素材item['素材名']}}</option>
-        </select>
+      <div>IDEA原単位'kg' 在庫単位:'g'</div>
+      <label class="input input-bordered flex items-center gap-2">
+        1kgあたり
+        <input type="number" min="0" class=" grow text-end" placeholder="例 10" />
+        g
       </label>
     </div>
 
-    <table v-else class="table table-sm">
-      <tbody>
-        <tr v-for="(構成item,i) of 原資材item['構成']">
-          <td>
-            <select class="select select-xs" v-model="構成item['素材名']">
-              <option v-for="素材item of 選択可能素材items" :value="素材item['素材名']">{{素材item['素材名']}}</option>
-            </select>
-          </td>
-          <td>
-            <input type="nuber" min=0 v-model="構成item['使用量']" class="input input-xs input-bordered w-14">
-          </td>
-          <td>
-            <input v-model="構成item['使用量単位']" class="input input-xs input-bordered w-14">
-          </td>
-          <td class="flex">
-            <svg @click="insert構成item(i)" class="w-6 mx-0"
-            data-slot="icon" fill="currentColor" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-              <path clip-rule="evenodd" fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14Zm.75-10.25v2.5h2.5a.75.75 0 0 1 0 1.5h-2.5v2.5a.75.75 0 0 1-1.5 0v-2.5h-2.5a.75.75 0 0 1 0-1.5h2.5v-2.5a.75.75 0 0 1 1.5 0Z"></path>
-            </svg>
+    <div class="">
+      <h2>構成</h2>
+      
+      <div v-if="!values['種別コード']">先に種別を選んでください</div>
 
-            <svg @click="原資材item['構成'].splice(i,1)" class="w-6 mx-0"
-            data-slot="icon" fill="currentColor" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-              <path clip-rule="evenodd" fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14Zm2.78-4.22a.75.75 0 0 1-1.06 0L8 9.06l-1.72 1.72a.75.75 0 1 1-1.06-1.06L6.94 8 5.22 6.28a.75.75 0 0 1 1.06-1.06L8 6.94l1.72-1.72a.75.75 0 1 1 1.06 1.06L9.06 8l1.72 1.72a.75.75 0 0 1 0 1.06Z"></path>
-            </svg>
-          </td>
-        </tr>
-      </tbody>
-    </table>    
+      <div v-else class=" max-w-full pl-3 overflow-y-scroll">
+        <FormArray name="構成" :種別コード="values['種別コード']"></FormArray>
+      </div>
+    </div>
+
+    <div class="w-full">
+      <h2>製法</h2>
+      <div class="pl-6">
+          <FormSelect name="製法" :items="製法マスタitems" ></FormSelect>
+      </div>
+    </div>
 
   </div>
 </template>
 
 <script>
-const Detail = defineComponent({
-  components:{TextInput,Checkbox,Select},
-  props:{modelValue:Object},
-  async setup(props, {emit}){
-    const {modelValue:原資材item} = props
 
-    const isEdit = 原資材item['構成コード']? false:true
+export default defineComponent({
+  components:{FormSelect, FormCheckbox, FormArray},
+  props:{原資材item:Object},
+  setup(props){
+    const {原資材item} = props
 
-    if(!マスタitems.品目分類items.length)await fetchマスタitems()
-    const {品目分類items, 素材items, 成型方法items} = マスタitems
-
-    const selected品目分類 = ref(null)
-
-    const 選択可能素材items = computed(()=>{
-      if(!selected品目分類.value)return []
-
-      if(selected品目分類.value['構成分割']){
-        return 素材items.filter(item=>item['品目分類コード']==='monomate')
-      }else{
-        return 素材items.filter(item=>item['品目分類コード']===selected品目分類.value['品目分類コード'])
+    const { handleSubmit, errors, meta, values } = useForm({
+      initialValues: {
+        種別コード: 原資材item['種別コード'] || '',
+        容リ法対象フラグ: 原資材item['容リ法対象フラグ'] || false,
+        プラスチックフラグ:原資材item['プラスチックフラグ'] || false,
+        製法コード: 原資材item['製法コード'] || '',
+        構成: 原資材item['構成'] || [],
+      },
+      validationSchema: {
+        種別コード:yup.string(),
+        容リ法対象フラグ:yup.boolean(),
+        プラスチックフラグ:yup.boolean(),
+        製法コード:yup.string(),
+        構成:yup.array()
       }
     })
 
-    watch(selected品目分類,(val)=>{
-      原資材item['成型方法']= val['品目分類コード']==='moldprod'
-    })
+    const { 種別マスタitems, IDEAマスタv2items, 製法マスタitems } = useMasters()
 
-    const insert構成item =(i)=>{
-      const new構成item = {構成コード:'',構成名:'',使いまわし:false,素材コード:'',素材名:'',使用量:0,使用量単位:'g'}
-
-      if(原資材item['構成'].some(item=>item['構成コード'])){
-        new構成item['構成コード'] = 構成items.find(item=>item['構成コード'])['構成コード']
-      }
-
-      構成items.splice(i+1,0,new構成item)
+    return { handleSubmit, errors, meta, values,
+      種別マスタitems, IDEAマスタv2items, 製法マスタitems
     }
-
-    function save(){
-
-    }
-
-    return {原資材item, isEdit, 品目分類items, 成型方法items, selected品目分類, 選択可能素材items, insert構成item, save}
-  },
-  template:'#detail'
+  }
 })
-</script>
 
+</script>

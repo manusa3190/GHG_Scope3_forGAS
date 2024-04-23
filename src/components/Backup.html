@@ -1,0 +1,45 @@
+<template>
+<form @submit="onSubmit">
+  <h1>入力確認</h1>
+
+  <InputField name="名前" />
+
+  <InputField name="メールアドレス" />
+
+  <button class="btn btn-primary" :disabled="!meta.valid">送信</button>
+</form>
+
+<pre style="background-color:black;color:white;padding:0.5rem">values:{{values}}</pre>
+
+<pre style="background-color:black;color:white;padding:0.5rem">errors:{{errors}}</pre>
+</template>
+
+<script>
+export default defineComponent({
+    components:{InputField},
+    setup(){
+
+        const {handleSubmit,values, errors, setValues, setFieldValue, meta} = useForm({
+          initialValues:{
+            名前:'あああ',
+            メールアドレス:'aaa@gmail.com'
+          },
+          validationSchema:{
+              名前:yup.string().required('名前を入力してください').min(2,'2文字以上'),
+              メールアドレス:yup.string().email('正しいメールアドレスを入力してください').required('メールアドレスを入力してください')
+          }
+        })
+
+        const onSubmit = handleSubmit(values=>{
+          console.log(JSON.stringify(values));
+          
+        })
+
+        function validateEmail(value) {
+          return window.yup.string().email().validateSync(value);
+        }
+
+        return { onSubmit, validateEmail, values,errors, meta};
+    }
+})
+</script>
