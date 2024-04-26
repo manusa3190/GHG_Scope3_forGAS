@@ -1,0 +1,55 @@
+<script>
+
+defineComponent({
+  props:{},
+  setup(props){
+    const { handleChange, value, handleBlur, errorMessage, meta, setValue } = useField(() => '容リ法分類',undefined);
+
+    const {容リ法マスタitems} = useMasters()
+
+    onMounted(()=>{
+      const columns = ['分類','内容']
+
+      const grid = new Grid({
+        columns,
+        data:容リ法マスタitems
+      })
+
+      grid.on('rowClick',(...args)=>{
+        const {cells} = args[1]
+        const 分類 = cells[columns.findIndex(c=>c==='分類')].data
+        setValue(分類)
+      })
+
+      grid.render(document.getElementById('容リ法'))
+    })
+
+    return {handleChange, value, handleBlur, errorMessage, meta, useState}
+  }
+})
+
+</script>
+
+<template>
+    <dl class="flex justify-between items-center max-w-60">
+      <dt>容リ法分類</dt>
+      <a class="link" onclick="容リ法modal.showModal()">{{ value }}</a>
+    </dl>
+    
+
+    <dialog id="容リ法modal" class="modal">
+      <div class="modal-box">
+
+        <p class="py-4">該当する容リ法分類を選択してください</p>
+
+        <table id="容リ法"></table>
+
+        <div class="modal-action">
+          <form method="dialog">
+            <!-- if there is a button in form, it will close the modal -->
+            <button class="btn">Close</button>
+          </form>
+        </div>
+      </div>
+    </dialog>
+</template>

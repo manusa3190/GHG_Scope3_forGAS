@@ -1,5 +1,43 @@
 <template>
-  <div class="space-y-8 prose">
+  <form class="space-y-8 prose prose-h2">
+    <div v-if="!meta.valid" role="alert" class="alert alert-warning p-0">
+        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+
+        <table class=" text-xs">
+          <tr v-for=" message, fieldName in errors " >
+            <td>{{fieldName}}：</td> <td>{{ message }}</td>
+          </tr>
+        </table>
+        
+    </div>
+
+    <details class="collapse bg-base-200">
+      <summary class="collapse-title text-sm">デバッグ用（本番では消します）</summary>
+      <div class="collapse-content"> 
+        <pre class=" text-[6pt]">{{values}}</pre>
+      </div>
+    </details>
+
+    <div>
+      <div v-if="!useState().isEdit"  class="flex justify-between">
+          <RecordComposition v-if="$route.name==='一覧'" :原資材item="原資材item"></RecordComposition>
+          <button class="btn btn-primary" @click="useState().$patch({isEdit:true})">再編集</button>
+      </div>
+
+      <div v-else class="flex w-full">
+          <SelectComposition v-if="$route.name==='一覧'" :setValues="setValues"></SelectComposition>
+          <div class="flex-1"></div>
+          <button type="button" class=" btn btn-primary" :disabled="!meta.valid" @click="save()">保存</button>
+          <button type="button" class=" btn btn-ghost" @click="useState().$patch({isEdit:false})">キャンセル</button>
+      </div>
+    </div>
+
+
+    <div v-if="$route.name==='構成マスタ管理'" class="">
+      <div class="pl-6">
+          <FormInput name="構成名" />
+      </div>
+    </div>
 
     <div class="">
       <h2>種別</h2>
@@ -11,20 +49,25 @@
     <div class="">
       <h2>関連法規</h2>
       <div class="pl-6">
-          <FormCheckbox name="容リ法対象フラグ" />
+          <Form容リ法 />
           <FormCheckbox name="プラスチックフラグ" />
       </div>
     </div>
 
-    <div class="">
-      <h2>IDEA換算設定</h2>
+    <div>
+      <h2>排出量計算用情報</h2>
+      
+      <div v-if="原資材item['品目区分名']==='資材'" class="">
+        <p>樹脂成型品や個箱など、1個あたりの重量が必要なもの</p>
+        <p>在庫単位：{{values.在庫単位名}}</p>
+        <FormInput name="在庫単位あたり重量" type="number" suffix="g" ></FormInput>
+        <FormInput name="使用単位あたり重量" type="number" suffix="g/枚" ></FormInput>
+      </div>
 
-      <div>IDEA原単位'kg' 在庫単位:'g'</div>
-      <label class="input input-bordered flex items-center gap-2">
-        1kgあたり
-        <input type="number" min="0" class=" grow text-end" placeholder="例 10" />
-        g
-      </label>
+      <div v-if="values['種別コード']==='alcohols'">
+        <p>アルコールはIDEA原単位がLなので、比重が必要</p>
+        <FormInput name="比重" type="number" ></FormInput>
+      </div>
     </div>
 
     <div class="">
@@ -38,44 +81,96 @@
     </div>
 
     <div class="w-full">
-      <h2>製法</h2>
+      <h2>製法</h2><span>※開発中</span>
       <div class="pl-6">
           <FormSelect name="製法" :items="製法マスタitems" ></FormSelect>
       </div>
     </div>
 
-  </div>
+  </form>
 </template>
 
 <script>
 
 export default defineComponent({
-  components:{FormSelect, FormCheckbox, FormArray},
+  components:{RecordComposition,SelectComposition,Form容リ法, FormSelect, FormCheckbox, FormArray, FormInput},
   props:{原資材item:Object},
-  setup(props){
+  setup(props,{emit}){
+    const route = useRoute()
+
     const {原資材item} = props
 
-    const { handleSubmit, errors, meta, values } = useForm({
+    const { handleSubmit, errors, meta, values, setValues } = useForm({
       initialValues: {
-        種別コード: 原資材item['種別コード'] || '',
-        容リ法対象フラグ: 原資材item['容リ法対象フラグ'] || false,
-        プラスチックフラグ:原資材item['プラスチックフラグ'] || false,
-        製法コード: 原資材item['製法コード'] || '',
-        構成: 原資材item['構成'] || [],
+        品目コード       :原資材item['品目コード'] || null,
+        構成コード       :原資材item['構成コード'],
+        構成名           :原資材item['構成名']    || 原資材item['品名']+'_構成',
+        種別コード       :原資材item['種別コード'],
+        使いまわし       :原資材item['使いまわし'] || false,
+        作成者メールアドレス:原資材item['作成者メールアドレス'],
+        作成者所属名     :原資材item['作成者所属名'],
+        在庫単位名       :原資材item['在庫単位名'],
+        在庫単位あたり重量:原資材item['在庫単位あたり重量'] || null,
+        使用単位あたり重量:原資材item['使用単位あたり重量'] || null,
+        種別コード        :原資材item['種別コード'],
+        容リ法分類        : 原資材item['容リ法分類'] || '対象外',
+        プラスチックフラグ :原資材item['プラスチックフラグ'] || false,
+        製法コード        : 原資材item['製法コード'],
+        構成             : 原資材item['構成']       || []
       },
       validationSchema: {
-        種別コード:yup.string(),
-        容リ法対象フラグ:yup.boolean(),
-        プラスチックフラグ:yup.boolean(),
-        製法コード:yup.string(),
-        構成:yup.array()
+        構成名:yup.string(),
+        種別コード:yup.string().nullable(),
+        容リ法分類:yup.string().nullable().oneOf(['対象外','プラ容器','紙容器','プラ包装','紙包装','ガラス（無色）','ガラス（茶色）','ガラス（他の色）','PETボトル']),
+        プラスチックフラグ:yup.boolean().nullable(),
+        製法コード:yup.string().nullable(),
+        構成:yup.array().min(1,'組成の要素を最低一つは入れてください'),
+        在庫単位あたり重量:yup.number().nullable().positive('0以上にしてください'),
+        使用単位あたり重量:yup.number().nullable().positive('0以上にしてください'),
       }
     })
 
     const { 種別マスタitems, IDEAマスタv2items, 製法マスタitems } = useMasters()
 
-    return { handleSubmit, errors, meta, values,
-      種別マスタitems, IDEAマスタv2items, 製法マスタitems
+    const save = handleSubmit(values=>{
+      useState().$patch({isLoading:true})
+
+      const currentUser = useUsers().自所属users.find(user=>user.isCurrentUser)
+
+      values['作成者メールアドレス'] = currentUser['メールアドレス']
+      values['作成者所属名'] = currentUser['所属名']
+
+      const {fetch自所属原資材docs, fetch使いまわし情報docs} = useTables()
+
+      if(route.name==='一覧'){
+        google.script.run
+          .withSuccessHandler( async res=>{
+             alert(`成功。${JSON.stringify(res)}`)
+             await Promise.all([fetch自所属原資材docs(),fetch使いまわし情報docs()])
+             emit('updated')
+          })
+          .withFailureHandler(err=>{
+             alert(`エラー。${err}`)
+          })
+          .set原資材(values)
+
+      }else if(route.name==='構成マスタ管理'){
+        google.script.run
+          .withSuccessHandler(async res=>{
+             alert(`成功。${JSON.stringify(res)}`)
+             await Promise.all([fetch自所属原資材docs(),fetch使いまわし情報docs()])
+             emit('updated')
+          })
+          .withFailureHandler(err=>{
+             alert(`エラー。${err}`)
+          })
+          .set情報and構成(values)
+      }
+    })
+
+    return { handleSubmit, errors, meta, values, setValues,
+      種別マスタitems, IDEAマスタv2items, 製法マスタitems,
+      useState, save
     }
   }
 })

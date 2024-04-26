@@ -1,6 +1,7 @@
 <script>
 
 defineComponent({
+  props:{原資材item:Object},
   setup(props){
     const {原資材item} = props
 
@@ -9,7 +10,24 @@ defineComponent({
     const dialog = ref(null)
 
     function record(){
-        dialog.value.close()
+      if(!構成名.value){
+        alert('構成名をつけてください')
+        return
+      }
+      const item = {...原資材item,構成名:構成名.value}
+      item['使いまわし'] = true
+      console.log(item)
+
+      google.script.run
+        .withSuccessHandler( async res=>{
+          alert(`登録しました ${res}`)
+          const {fetch自所属原資材docs, fetch使いまわし情報docs}= useTables()
+          await Promise.all([fetch自所属原資材docs(),fetch使いまわし情報docs()])
+          
+          dialog.value.close()
+        })
+        .set情報and構成(item)
+      
     }
 
     return {構成名, dialog, record}
@@ -19,7 +37,7 @@ defineComponent({
 </script>
 
 <template>
-    <button class=" link " @click="dialog.showModal()">この構成を登録</button>
+    <button type="button" class=" link" @click="dialog.showModal()">この構成を登録</button>
 
     <dialog class="modal" ref="dialog">
     <div class="modal-box">
@@ -60,8 +78,8 @@ defineComponent({
         </div>
 
         <div class="modal-action space-x-3">
-            <button class="btn btn-primary" @click="record">登録</button>
-            <button class="btn" @click="dialog.close()">閉じる</button>
+            <button type="button" class="btn btn-primary" @click="record">登録</button>
+            <button type="button" class="btn" @click="dialog.close()">閉じる</button>
         </div>
     </div>
     </dialog>

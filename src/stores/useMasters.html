@@ -1,172 +1,37 @@
 <script>
-// const useMaster = defineStore("master", async()=>{
-//   const 種別マスタitems = ref([])
-//   const IDEAマスタv2items = ref([]) 
-//   const 製法マスタitems = ref([])
 
-//   const fetchマスタ =()=>new Promise((resolve)=>{
-//     google.script.run
-//       .withSuccessHandler(res=>{
-//         種別マスタitems.value = res['種別マスタitems']
-//         IDEAマスタv2items.value = res['IDEAマスタv2items']
-//         製法マスタitems.value = res['製法マスタitems']
-//         resolve()
-//       })
-//       .getマスタitems()
-//   })
+defineStore("master",()=>{
+  const 種別マスタitems = ref([])
+  const IDEAマスタv2items = ref([]) 
+  const 製法マスタitems = ref([])
+  const 容リ法マスタitems = ref([
+    {分類:'対象外',内容:'容器・包装ではないもの'},
+    {分類:'プラ容器',内容:'商品を中に入れるもの（袋を含む）\n中身商品と分離した後不要となるプラ製容器・包装'},
+    {分類:'紙容器',内容:'商品を中に入れるもの（袋を含む）\n中身商品と分離した後不要となる紙製容器・包装'},
+    {分類:'プラ包装',内容:'商品を包むもので中身商品と分離した後不要となるプラ製容器・包装'},
+    {分類:'紙包装',内容:'商品を包むもので中身商品と分離した後不要となる紙製容器・包装'},
+    {分類:'ガラス（無色）',内容:'無色のガラス'},
+    {分類:'ガラス（茶色）',内容:'茶色のガラス'},
+    {分類:'ガラス（他の色）',内容:'無色・茶以外の色のついたガラス'},
+    {分類:'PETボトル',内容:'食料品（しょうゆ、※乳飲料等、※その他調味料）、清涼飲料、酒類）を充てんするためのもの'},
+  ])
 
-//   return {種別マスタitems, 素材items, 製法マスタitems, fetchマスタ}
-// })
-
-const 種別マスタtsv = `種別コード	種別名	候補小分類コードリスト
-blisters	ブリスター	resimold;173;192
-almpouch	アルミ袋・パウチ	laminate;173;192
-packsach	個包装・サッシェ	laminate;173;192
-shrifilm	シュリンクフィルム	laminate;173;192
-plasmold	樹脂成型資材	resimold;173;192
-resinpro	その他樹脂製資材	resimold;173;192
-lablseal	ラベル・POPシール	173;192;152
-paperbox	個箱・台紙	152;155
-cardbbox	外箱	155;
-fixtures	什器	152;155
-papewood	その他紙製・木製資材	151;152;155
-tubescon	チューブ容器	199;243
-metalcon	缶など金属製容器・キャップ	metalpro;241;243
-plastcon	ボトルなどプラ製容器・キャップ	172;173
-glasscon	瓶などガラス製容器・陶器	221;224
-rubbermt	ゴム製資材	017;194;
-nowovfab	不織布	fabricpr;119;174
-clothfib	布・繊維	119;174
-herbmedi	生薬	176;
-aminovit	アミノ酸・ビタミン等	094;176
-effectiv	その他有効成分	103;098;176
-qretains	加工および品質保持用原料	092;093;173;176;181
-othhelma	その他食品・医薬品・化粧品原料	091;092;093;094;095;097;098;099;176;181
-fragranc	香料	179;
-alcohols	アルコール	102;173;175;
-fatsoils	油脂・脂肪酸	175;
-surfctnt	界面活性剤	175;
-acidbase	有機酸・ソーダ	172;173
-othmisma	その他非食品原料	181;241;243`
-
-const IDEAマスタv2tsv = `IDEA製品コード	IDEA製品名	小分類コード	小分類名	国	単位	推奨フラグ	選択回数
-17219205	生ゴム, ラテックス	017	食用・非食用作物	VN	kg	TRUE	1
-91919000	その他の畜産食料品(ブロイラー加工品を除く)	091	畜産食料品	JP	kg	TRUE	3
-92211000	寒天	092	水産加工食品	JP	kg	TRUE	2
-93129000	その他の農産保存食料品	093	農産加工食品	JP	kg	TRUE	2
-94211202	食用アミノ酸	094	調味料	JP	kg	TRUE	1
-95300000	ぶどう糖、水あめ、異性化糖, 4桁	095	糖類	JP	kg	TRUE	2
-97211000	洋生菓子	097	パン・菓子類	JP	kg	TRUE	1
-98119000	その他の植物油脂	098	油脂製品	JP	kg	TRUE	3
-99111000	でんぷん	099	食品	JP	kg	TRUE	1
-102411000	添加用アルコール, 飲料用, 95%換算	102	アルコール飲料	JP	L	TRUE	2
-103211000	コーヒー	103	茶・コーヒー	JP	kg	TRUE	1
-119311000	フェルト・不織布	119	繊維工業製品	JP	kg	TRUE	0
-151119000	その他のパルプ	151	パルプ	JP	kg	TRUE	2
-152113000	塗工印刷用紙	152	紙	JP	kg	TRUE	0
-152118000	さらし包装紙	152	紙	JP	kg	TRUE	0
-152215000	白ボール	152	紙	JP	kg	TRUE	0
-155311000	段ボール箱	155	紙袋・紙器	JP	JPY	TRUE	0
-155400000	紙器, 4桁	155	紙袋・紙器	JP	JPY	TRUE	0
-172111000	水酸化ナトリウム, 97%	172	工業用化学製品	JP	kg	TRUE	2
-172114000	塩化アンモニウム	172	工業用化学製品	JP	kg	TRUE	2
-172219000	その他の無機顔料	172	工業用化学製品	JP	kg	TRUE	1
-173218000	プロピレングリコール	173	石油化学系基礎製品	JP	kg	TRUE	2
-173218101	ジプロピレングリコール, PG副生	173	石油化学系基礎製品	JP	kg	TRUE	2
-173239000	その他の脂肪族系中間物	173	石油化学系基礎製品	JP	kg	TRUE	3
-173239104	1,4-ブタンジオール	173	石油化学系基礎製品	JP	kg	TRUE	1
-173239212	合成エタノール	173	石油化学系基礎製品	JP	kg	TRUE	1
-173319000	その他の発酵製品	173	石油化学系基礎製品	JP	JPY	TRUE	6
-173319200	くえん酸, 発酵法	173	石油化学系基礎製品	JP	kg	TRUE	6
-173429000	その他の環式中間物	173	石油化学系基礎製品	JP	kg	TRUE	2
-173429137	安息香酸	173	石油化学系基礎製品	JP	kg	TRUE	3
-173439000	その他の合成染料	173	石油化学系基礎製品	JP	kg	TRUE	2
-173516000	ポリエチレン	173	石油化学系基礎製品	JP	kg	TRUE	0
-173516100	高密度ポリエチレン（HDPE）	173	石油化学系基礎製品	JP	kg	TRUE	0
-173516102	低密度ポリエチレン	173	石油化学系基礎製品	JP	kg	TRUE	0
-173517100	アクリロニトリルスチレン樹脂	173	石油化学系基礎製品	JP	kg	TRUE	0
-173517102	ポリスチレン, 一般用	173	石油化学系基礎製品	JP	kg	TRUE	0
-173517103	ポリスチレン, 耐衝撃性	173	石油化学系基礎製品	JP	kg	TRUE	0
-173517106	ABS樹脂	173	石油化学系基礎製品	JP	kg	TRUE	0
-173518000	ポリプロピレン	173	石油化学系基礎製品	JP	kg	TRUE	0
-173523000	ポリビニルアルコール	173	石油化学系基礎製品	JP	kg	TRUE	2
-173526000	ポリエチレンテレフタレート	173	石油化学系基礎製品	JP	kg	TRUE	0
-173531000	ポリアセタール	173	石油化学系基礎製品	JP	kg	TRUE	0
-173539000	その他のプラスチック	173	石油化学系基礎製品	JP	kg	TRUE	0
-173539200	ポリジメチルシロキサン	173	石油化学系基礎製品	JP	kg	TRUE	2
-173539201	シリコーンゴム, コンパウンド	173	石油化学系基礎製品	JP	kg	TRUE	0
-173600000	合成ゴム(合成ラテックスを含む), 4桁	173	石油化学系基礎製品	JP	kg	TRUE	0
-173949000	その他の他に分類されない有機化学工業製品	173	石油化学系基礎製品	JP	kg	TRUE	11
-173949101	N-メチル-2-ピロリドン（NMP）	173	石油化学系基礎製品	JP	kg	TRUE	1
-173949105	キレート剤	173	石油化学系基礎製品	JP	kg	TRUE	2
-174211000	ナイロン長繊維糸・短繊維	174	合成繊維	JP	kg	TRUE	0
-175112000	精製脂肪酸	175	脂肪酸・油脂及び加工品	JP	kg	TRUE	1
-175114000	精製グリセリン	175	脂肪酸・油脂及び加工品	JP	kg	TRUE	3
-175115200	高級アルコール, やし油	175	脂肪酸・油脂及び加工品	JP	kg	TRUE	3
-175311000	陰イオン界面活性剤	175	脂肪酸・油脂及び加工品	JP	kg	TRUE	3
-175312000	陽イオン界面活性剤	175	脂肪酸・油脂及び加工品	JP	kg	TRUE	2
-175313000	非イオン界面活性剤	175	脂肪酸・油脂及び加工品	JP	kg	TRUE	11
-176111000	医薬品原末、原液	176	医薬品	JP	JPY	TRUE	15
-176411000	生薬・漢方製剤	176	医薬品	JP	JPY	TRUE	8
-179311000	天然香料	179	その他化学工業製品	JP	kg	TRUE	5
-179313000	調合香料	179	その他化学工業製品	JP	kg	TRUE	74
-179412000	セルロース系接着剤・プラスチック系接着剤	179	その他化学工業製品	JP	kg	TRUE	0
-181122000	パラフィン	181	石油精製製品	JP	kg	TRUE	4
-192100000	プラスチックフィルム, 4桁	192	プラスチックフィルム製品	JP	kg	TRUE	0
-192111000	包装用軟質プラスチックフィルム, 厚さ0.2mm未満で軟質のもの	192	プラスチックフィルム製品	JP	kg	TRUE	0
-192211000	プラスチックシート, 厚さ0.2mm以上で軟質のもの	192	プラスチックフィルム製品	JP	kg	TRUE	0
-194111000	軟質プラスチック発泡製品(半硬質性を含む)	194	発泡・強化プラスチック製品	JP	kg	TRUE	0
-199211000	プラスチック製中空成形容器	199	その他プラスチック製品	JP	kg	TRUE	0
-221400200	ガラスびん	221	ガラス・ガラス製品	JP	kg	TRUE	0
-221711200	ガラス繊維（チョップドストランドマット）	221	ガラス・ガラス製品	JP	kg	TRUE	0
-224311000	陶磁器製置物	224	陶器・セラミックス製品	JP	kg	TRUE	0
-241312000	水酸化アルミニウム	241	非鉄金属(一次製錬・精製品)	JP	kg	TRUE	1
-243211202	アルミニウム板材, 箔地用	243	非鉄金属・同合金圧延品・伸材	JP	kg	TRUE	0`
-
-const 製法マスタtsv = `製法コード	製法名	小分類コード	小分類名
-injeblow	インジェクションブロー	resimold	樹脂成型
-onestinj	1ステージインジェクションブロー	resimold	樹脂成型
-twostinj	2ステージインジェクションブロー	resimold	樹脂成型
-direblow	ダイレクトブロー	resimold	樹脂成型
-dicolmol	2色成型	resimold	樹脂成型
-sheetmol	シート成型	resimold	樹脂成型
-pressmol	プレス成型	resimold	樹脂成型
-drylamin	ドライラミ	laminate	ラミネーション
-extlamin	押し出しラミ	laminate	ラミネーション
-rollingp	圧延加工（金属）	metalpro	金属加工
-platingp	めっき加工	metalpro	金属加工
-spunbond	スパンボンド法	fabricpr	不織布加工
-meltblow	メルトブロー法	fabricpr	不織布加工
-thrmbond	サーマルボンド法	fabricpr	不織布加工
-chembond	ケミカルボンド法	fabricpr	不織布加工
-spunlace	スパンレース法	fabricpr	不織布加工`
-
-function parseTsvToItems(tsv) {
-  const values = tsv.split('\n').map((line) => line.trim().split('\t'))
-  const columns = values.shift()
-  const items = values.map((row) => {
-    return columns.reduce((item, colName, idx) => {
-        let value = row[idx]
-        if(value==='TRUE')value=true
-        if(value==='FALSE')value=false
-        if(typeof(value)==='string' && value.includes(';'))value = value.split(';')
-        return Object.assign(item, { [colName]: value })
-      },{})
-  })
-  return items
-}
-
-const useMasters = defineStore('masters', ()=>{
-  const 種別マスタitems = parseTsvToItems(種別マスタtsv)
-  const IDEAマスタv2items = parseTsvToItems(IDEAマスタv2tsv)
-  const 製法マスタitems = parseTsvToItems(製法マスタtsv)
-
-  const 種別マスタdocs = 種別マスタitems.reduce((docs,item)=>Object.assign(docs,{[item['種別コード']]:item}),{});
-
-  const fetchマスタ=()=>new Promise((resolve)=>{
-    resolve()
+  const fetchマスタ =()=>new Promise((resolve)=>{
+    google.script.run
+      .withSuccessHandler(res=>{
+        種別マスタitems.value = res['種別マスタitems']
+        IDEAマスタv2items.value = res['IDEAマスタv2items']
+        製法マスタitems.value = res['製法マスタitems']
+        resolve()
+      })
+      .getマスタitems()
   })
 
-  return {種別マスタitems, 種別マスタdocs, IDEAマスタv2items, 製法マスタitems, fetchマスタ}
+  const 種別マスタdocs = computed(()=>{
+    return 種別マスタitems.value.reduce((docs,item)=>Object.assign(docs,{[item['種別コード']]:item}),{});
+  })
+
+  return {種別マスタitems, 種別マスタdocs, IDEAマスタv2items, 製法マスタitems, 容リ法マスタitems, fetchマスタ}
 })
+
 </script>

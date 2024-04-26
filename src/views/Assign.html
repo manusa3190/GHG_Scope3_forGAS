@@ -1,41 +1,101 @@
-<template>
-  <div class="title">割り振り</div>
-
-  <!-- <div ref='データ一覧grid'></div> -->
-  <div id="example"></div>
-
-  <button class="btn btn-primary" @click="save">保存</button>
-</template>
-
 <script>
-const Assign = defineComponent({
+
+defineComponent({
   async setup(){
+
+    const {自所属users} = useUsers()
+    const myself = 自所属users.find(user=>user.isCurrentUser)
+
+    const {自所属原資材docs} = useTables()
+
+    const columns = ['品目コード','品名','担当者メールアドレス']
+
+    const 自所属原資材items = Object.values(自所属原資材docs).map(item=>columns.map(colName=>item[colName]))
+
     var hot;
 
-    // onMounted(async()=>{
-    //     const columns = ['品目コード','品名','担当者メールアドレス','担当者名']
-    //     const data =  Object.values(自所属原資材docs).map(item=>{
-    //       return columns.map(colName=>item[colName])
-    //     })
+    onMounted(async()=>{
 
-    //     hot = new Handsontable(document.getElementById('example'), {
-    //       // columns:columns.map(colName=>({label:{value:colName}})),
-    //       data:data,
-    //       rowHeaders: true,
-    //       colHeaders: columns,
-    //       height: 'auto',
-    //       autoWrapRow: true,
-    //       autoWrapCol: true,
-    //       licenseKey: 'non-commercial-and-evaluation' // for non-commercial use only
-    //     });      
-    // })
+        const columnsForHeader = columns.map(colName=>{
+          if(colName==='担当者メールアドレス'){
+            return {type:'dropdown', source:自所属users.map(user=>user['メールアドレス'])}
+          }else{
+            return colName
+          }
+        })
+
+        hot = new Handsontable(document.getElementById('example'), {
+          columns:columnsForHeader,
+          data:自所属原資材items,
+          rowHeaders: true,
+          colHeaders:columns,
+          height: 'auto',
+          autoWrapRow: true,
+          autoWrapCol: true,
+          licenseKey: 'non-commercial-and-evaluation' // for non-commercial use only
+        })
+
+        // 従業員table
+        const grid = new Grid({
+          columns:['従業員名', 'メールアドレス'],
+          data:自所属users
+        })
+
+        grid.render(document.getElementById('従業員table'))
+    })
 
     function save(){
-      console.log(hot.getData())
+
+      const 自所属usersDocs = 自所属users.reduce((docs,user)=>Object.assign(docs,{[user['メールアドレス']]:user['従業員名']}),{})
+
+      const values = hot.getData()
+
+      const items = values.map(row=>{
+            return columns.reduce((item,colName,idx)=>Object.assign(item,{[colName]:row[idx]}),{})
+          })
+          .filter(item=>item['担当者メールアドレス'])
+          .map(item=>{
+            item['担当者名'] = 自所属usersDocs[item['担当者メールアドレス']]
+            return item
+          })
+
+      google.script.run
+        .withSuccessHandler(res=>{
+          alert('担当者割り振りを保存しました')
+        })
+        .withFailureHandler(err=>{
+          alert(`担当者割り振りの保存に失敗しました。エラーメッセージ：${err}`)
+        })
+        .set担当者(items)
     }
 
-    return {currentUserEmail,save}
-  },
-  template:'#assign'
+    return {save, myself}
+  }
 })
+
 </script>
+
+<template>
+  <div class="flex h-screen">
+
+    <!-- 左側 -->
+    <div class=" flex-1">
+      <nav class=" w-full px-4 py-2 flex justify-end">
+        <button class="btn btn-primary" @click="save">保存</button>
+      </nav>
+
+      <div id="example"></div>
+      
+    </div>
+
+    <!-- 右側 -->
+    <div class="bg-orange-100 h-full w-96 flex-none p-3">
+
+      <div>{{ myself['所属名'] }}の品目を表示中</div>
+
+      <table id="従業員table"></table>
+      
+    </div>
+
+  </div>
+</template>

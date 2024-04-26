@@ -7,6 +7,14 @@ const doGet=()=>{
 function require(filePath){
   let [folderName,fileName] = filePath.split('/')
 
+  if(folderName==='App'){
+    const content = HtmlService.createHtmlOutputFromFile(`src/App`).getContent()
+    const res = content
+      .replace(/<template>\n/,`<script type="text/x-template" id="app">`)
+      .replace(/<\/template>\n\n<script>/,'</script>  <script>')
+    return res
+  }
+
   const content = HtmlService.createHtmlOutputFromFile('src/' + filePath).getContent()
 
   if(content.includes('defineComponent')){
@@ -29,7 +37,13 @@ function require(filePath){
   }
 
   if(content.includes('defineStore')){
-    
+    const storeMatch = content.match(/defineStore([\s\S]*?)<\/script>/)
+
+    if(!storeMatch)return
+
+    const store = `const ${fileName} = defineStore` + storeMatch[1]
+
+    return store
   }
 
 }

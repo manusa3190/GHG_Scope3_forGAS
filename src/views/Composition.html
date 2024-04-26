@@ -3,21 +3,32 @@
 defineComponent({
   components:{Detail},
   setup(){
+    const {種別マスタitems, 種別マスタdocs, IDEAマスタv2items, 製法マスタitems} = useMasters()
+
     const {自所属原資材docs, 使いまわし情報docs, fetch自所属原資材docs, fetch使いまわし情報docs, set原資材doc, set使いまわし情報doc} = useTables()
 
     const {自所属users} = useUsers()
+    const currentUser = 自所属users.find(user=>user.isCurrentUser)
 
     const 構成item = ref(null)
-    watch(構成item,()=> state.$patch({isEdit:!構成item.value}))
+    watch(構成item,()=> useState().$patch({isEdit:true}))
 
     var grid
 
     onMounted(()=>{
-        const columns = ['構成コード','構成名','在庫単位','単位重量','製法']
+        const columns = ['構成コード','構成名','作成者メールアドレス',
+        {
+          id:'種別コード',
+          hidden:true
+        }, {
+          id:'種別名',
+          name:'種別名',
+          data:(row)=> row['種別コード']? 種別マスタdocs[row['種別コード']]['種別名']:''
+        }]
 
         grid = new Grid({
             columns,
-            data:[],
+            data:Object.values(使いまわし情報docs),
             className:{
                 td:'max-w-52 truncate'
             },
@@ -58,11 +69,13 @@ defineComponent({
     },{ immediate: true })
 
 
-    async function save(){
-        await set構成(構成item.value)
+    const updateConfig = () =>{
+      grid.updateConfig({data:Object.values(useTables().使いまわし情報docs)})
+      grid.forceRender()
+      useState().$patch({isLoading:false})
     }
 
-    return {query, 構成item, useState, }
+    return {query, 構成item, useState, updateConfig }
   }
 })
 
@@ -105,28 +118,7 @@ defineComponent({
         <div v-if="!構成item" class="">構成を選んでください</div>
 
         <div v-else class=" h-full flex flex-col">
-
-            <div class="flex justify-between">
-                <label class=" text-lg font-bold ">構成</label>
-
-                <div v-if="!useState().isEdit">
-                    <button class="btn btn-primary" @click="useState().$patch({isEdit:true})">再編集</button>
-                </div>
-
-                <div v-else class="flex">
-                    <button class=" btn btn-primary" @click="save()">保存</button>
-                    <button class=" btn btn-ghost" @click="useState().$patch({isEdit:false})">キャンセル</button>
-                </div>
-
-            </div>
-
-            <div>
-                <h2>構成名</h2>
-                {{ 構成item['構成名'] }}
-            </div>
-
-            <Detail :原資材item="構成item"></Detail>
-            
+            <Detail :key="構成item? 構成item['構成コード']:'0'" :原資材item="構成item" @updated="updateConfig"></Detail>
         </div>
 
     </div>

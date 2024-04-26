@@ -1,12 +1,13 @@
 <script>
 
 defineComponent({
+  props:{name:String, type:String, suffix:String},
   setup(props){
-    const {name, type} = props
+    const {name, type, suffix} = props
 
     const { handleChange, value, handleBlur, errorMessage, meta } = useField(() => name,undefined);
 
-    return {name, type, handleChange, value, handleBlur, errorMessage, meta, useState}
+    return {name, type, suffix, handleChange, value, handleBlur, errorMessage, meta, useState}
   }
 })
 
@@ -19,8 +20,14 @@ defineComponent({
       <span v-if="meta.required" class="text-red-500">*</span>
       <span class="label-text-alt text-red-500">{{ errorMessage }}</span>
     </div>
-    <input :disabled="useState().isEdit"
-    class="input input-bordered w-full max-w-xs disabled:bg-inherit disabled:text-inherit"
-    type="text" :value="value" @change="handleChange"  />
+
+    <div class="flex items-base gap-2">
+        <input :disabled="!useState().isEdit"
+        class="input input-bordered w-full max-w-xs disabled:bg-inherit disabled:text-inherit"
+        :type="type || 'text'" :value="value" @change="handleChange"  />
+
+        <span v-if="suffix" class=" truncate">{{suffix}}</span>
+    </div>
+
   </label>
 </template>

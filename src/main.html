@@ -27,19 +27,6 @@
 
     <div id="vue-app"></div>
 
-    <!--<?!= include('stores/useUsers') ?>
-    <?!= include('stores/useMasters') ?>
-    <?!= include('stores/useState') ?>
-    <?!= include('stores/useTables') ?>
-
-
-    <?!= include('components/Index') ?>
-    <?!= include('components/Detail') ?>
-
-    <?!= include('views/Index') ?>
-    <?!= include('views/Composition') ?>
-    <?!= include('views/Assign') ?> -->
-
     <!-- vue3 -->
     <script src="https://unpkg.com/vue@3/dist/vue.global.js" ></script>
     <!-- vue-router -->
@@ -57,14 +44,11 @@
       const { useRoute, useRouter} = VueRouter
       const { createRouter, createWebHashHistory} = VueRouter
       const { defineStore, createPinia } = Pinia;
-      const {Grid,html,useSelector} = gridjs
+      const { Grid,html,useSelector } = gridjs
     </script>
 
     <?!= include('App') ?>
-    <?!= include('stores/useUsers') ?>
-    <?!= include('stores/useTables') ?>
-    <?!= include('stores/useState') ?>
-    <?!= include('stores/useMasters') ?>
+
 
     <script type="module">
       import * as yup from 'https://cdn.jsdelivr.net/npm/yup@1.4.0/+esm';
@@ -73,23 +57,30 @@
 
           const { useForm, useField, useFieldArray } = VeeValidate;
 
+          <?!= require('stores/useState') ?>
+          <?!= require('stores/useUsers') ?>
+          <?!= require('stores/useTables') ?>
+          <?!= require('stores/useMasters') ?>
+
           <?!= require('components/FormArray') ?>
           <?!= require('components/FormCheckbox') ?>
           <?!= require('components/FormInput') ?>
           <?!= require('components/FormSelect') ?>
-          <?!= require('components/Detail') ?>
+          <?!= require('components/Form容リ法') ?>
           <?!= require('components/RecordComposition') ?>
           <?!= require('components/SelectComposition') ?>
+          <?!= require('components/Detail') ?>
 
           <?!= require('views/Index') ?>
           <?!= require('views/Composition') ?>
+          <?!= require('views/Assign') ?>
 
           const router = createRouter({
             history: createWebHashHistory(),
             routes:[
               { path: '/', name:'一覧', component: Index },
               { path: '/component', name:'構成マスタ管理', component: Composition },
-              // { path: '/assign', name:'記入担当割り振り', component: Assign },
+              { path: '/assign', name:'記入担当割り振り', component: Assign },
             ]
           })
 

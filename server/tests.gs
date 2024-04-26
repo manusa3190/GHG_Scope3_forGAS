@@ -28,6 +28,16 @@ test1.setTest('get自所属原資材docs',()=>{
   return {expect:true, result:true}
 })
 
+test1.setTest('getMasters',()=>{
+  const res = getMasters()
+
+  const {種別マスタitems, IDEAマスタv2items, 製法マスタitems} = res
+  console.log(種別マスタitems)
+  const result = [種別マスタitems, IDEAマスタv2items, 製法マスタitems].every(items=>items.length>0)
+
+  return {expect:true, result}
+})
+
 function exec(){
-  test1.run({only:'get自所属原資材docs'})
+  test1.run({only:'getMasters'})
 }

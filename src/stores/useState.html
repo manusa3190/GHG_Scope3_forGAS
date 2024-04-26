@@ -1,8 +1,9 @@
 <script>
 const useState = defineStore('state',()=> {
   const isEdit = ref(false)
+  const isLoading = ref(false)
 
-  return {isEdit}
+  return {isEdit, isLoading}
 })
 
 </script>
