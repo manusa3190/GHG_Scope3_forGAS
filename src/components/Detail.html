@@ -119,7 +119,7 @@ export default defineComponent({
         容リ法分類        : 原資材item['容リ法分類'] || '対象外',
         プラスチックフラグ :原資材item['プラスチックフラグ'] || false,
         製法コード        : 原資材item['製法コード'],
-        組成             : 原資材item['構成']       || []
+        組成             : 原資材item['組成'] || [],
       },
       validationSchema: {
         構成名:yup.string(),
@@ -127,7 +127,7 @@ export default defineComponent({
         容リ法分類:yup.string().nullable().oneOf(['対象外','プラ容器','紙容器','プラ包装','紙包装','ガラス（無色）','ガラス（茶色）','ガラス（他の色）','PETボトル']),
         プラスチックフラグ:yup.boolean().nullable(),
         製法コード:yup.string().nullable(),
-        組成:yup.array(),
+        組成:yup.array().min(1,'組成は最低一つ必要です'),
         在庫単位あたり重量:yup.number().nullable().positive('0以上にしてください'),
         使用単位あたり重量:yup.number().nullable().positive('0以上にしてください'),
       }
@@ -173,7 +173,7 @@ export default defineComponent({
 
     return { handleSubmit, errors, meta, values, setValues,
       種別マスタitems, IDEAマスタv2items, 製法マスタitems,
-      useState, save
+      useState, save,
     }
   }
 })

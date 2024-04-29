@@ -6,8 +6,8 @@ export default defineComponent({
       const { 種別コード} = props
 
       // const {value:種別コード} = useField(()=>'種別コード',undefined)
-
-      const { remove, push, update, fields } = useFieldArray(() => '組成', undefined);
+      const { remove, push, update, fields } = useFieldArray(()=>'組成', []);
+      console.log(1,fields.value)
 
       const edittingIdx = ref(-1)
 

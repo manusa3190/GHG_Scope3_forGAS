@@ -45,10 +45,10 @@ function get自所属原資材docs(所属名=''){
       const {構成コード} = 原資材item
       if(構成コード){
         Object.assign(原資材item,情報テーブル.docs[構成コード])
-        原資材item['構成'] = 構成テーブルitems.filter(item=>item['構成コード']===構成コード)
+        原資材item['組成'] = 構成テーブルitems.filter(item=>item['構成コード']===構成コード)
       }else{
         Object.assign(原資材item, empty情報item)
-        原資材item['構成'] = []
+        原資材item['組成'] = []
       }
   })
 
