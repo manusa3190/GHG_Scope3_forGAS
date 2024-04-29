@@ -21,12 +21,12 @@ defineComponent({
       <span class="label-text-alt text-red-500">{{ errorMessage }}</span>
     </div>
 
-    <div class="flex items-base gap-2">
-        <input :disabled="!useState().isEdit"
-        class="input input-bordered w-full max-w-xs disabled:bg-inherit disabled:text-inherit"
-        :type="type || 'text'" :value="value" @change="handleChange"  />
+    <div class="input-sm w-36 flex" 
+    :class="{'input input-bordered':useState().isEdit}">
+      <input :disabled="!useState().isEdit" class=" w-16 "
+      :type="type || 'text'" :value="value" @change="handleChange" />
 
-        <span v-if="suffix" class=" truncate">{{suffix}}</span>
+      <span v-if="suffix" class=" truncate">{{suffix}}</span>
     </div>
 
   </label>

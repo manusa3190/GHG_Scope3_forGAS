@@ -39,5 +39,5 @@ test1.setTest('getMasters',()=>{
 })
 
 function exec(){
-  test1.run({only:'getMasters'})
+  test1.run({only:'get自所属原資材docs'})
 }

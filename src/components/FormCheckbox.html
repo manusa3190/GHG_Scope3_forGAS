@@ -5,12 +5,9 @@ defineComponent({
   setup(props){
     const {name} = props
 
-    const { handleChange, checked } = useField(name, undefined,{
-        type: 'checkbox',
-        checkedValue: true,
-    })
+    const {value, handleChange} = useField(()=>name,undefined)
 
-    return {name, handleChange, checked, useState} 
+    return {name, value, handleChange, useState}
   }
 })
 
@@ -20,7 +17,7 @@ defineComponent({
 <div class="form-control max-w-[200px]">
   <label class="label cursor-pointer ">
     <span class="label-text">{{ name.replace('フラグ','') }}</span> 
-    <input type="checkbox" :checked="checked" class="checkbox disabled:opacity-100" @change="handleChange" :disabled="!useState().isEdit"/>
+    <input type="checkbox" class=" checkbox checkbox-primary" :checked="value" @change="handleChange($event.target.checked)" :disabled="!useState().isEdit"/>
   </label>
 </div>
 </template>

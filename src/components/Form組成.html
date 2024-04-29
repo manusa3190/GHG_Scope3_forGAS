@@ -5,14 +5,16 @@ export default defineComponent({
   setup(props){
       const { 種別コード} = props
 
-      const { remove, push, update, fields } = useFieldArray(() => '構成', undefined );
+      // const {value:種別コード} = useField(()=>'種別コード',undefined)
+
+      const { remove, push, update, fields } = useFieldArray(() => '組成', undefined);
 
       const edittingIdx = ref(-1)
 
-      const 構成temp = {構成コード:'',IDEA製品コード:'',IDEA製品名:'',使用量:0,使用量単位:'g'}
+      const 構成temp = {構成コード:'' ,IDEA製品コード:'',IDEA製品名:'',使用量:0,使用量単位:'g'}
 
       const {values:編集中構成, errors, setFieldValue, resetForm } = useForm({
-              initialValues:{構成コード:'',IDEA製品コード:'',IDEA製品名:'',使用量:0,使用量単位:'g'},
+              initialValues:{組成コード:'',構成コード:'',IDEA製品コード:'',IDEA製品名:'',使用量:0,使用量単位:'g'},
               validationSchema:{
                   構成コード:yup.string(),
                   IDEA製品コード:yup.string(),
@@ -39,6 +41,8 @@ export default defineComponent({
           if(!種別コード)return[]
 
           let {候補小分類コードリスト} = 種別マスタdocs[種別コード]
+          候補小分類コードリスト = 候補小分類コードリスト.map(e=> /^\d+$/.test(e)? Number(e):e)
+
           return IDEAマスタv2items
               .filter(item=> 候補のみ.value? 候補小分類コードリスト.includes(item['小分類コード']):true)
               .filter(item=> 推奨のみ.value? item['推奨フラグ']:true)
@@ -49,6 +53,7 @@ export default defineComponent({
       return {remove, push, update, fields, edittingIdx, 構成temp,
         編集中構成, errors, setFieldValue, resetForm,
         構成に反映, 検索word, 推奨のみ, 候補のみ, 候補IDEAマスタitems,
+        種別コード,
         useState
       }
   }
@@ -57,7 +62,7 @@ export default defineComponent({
 </script>
 
 <template>
-    <table class=" table table-sm">
+    <table class=" table table-sm !m-0">
         <tbody>
             <tr v-for="(f,i) of fields">
                 <td>

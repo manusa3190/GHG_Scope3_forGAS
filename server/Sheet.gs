@@ -51,6 +51,10 @@ class Sheet {
         if(value instanceof Date){
           value = value.toUTCString()
         }
+
+        if(value===''){
+          value = null
+        }
         return Object.assign(item,{[columnName]:value})
       },{})
     })

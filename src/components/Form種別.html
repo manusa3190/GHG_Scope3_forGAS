@@ -1,0 +1,30 @@
+<script>
+
+defineComponent({
+  props:{name:String, items:Array},
+  setup(props){
+    const { handleChange, value, handleBlur, errorMessage, meta } = useField(() => '種別コード',undefined);
+
+    const {種別マスタitems, 種別マスタdocs} = useMasters()
+
+    return { value, handleChange, 種別マスタitems, useState, 種別マスタdocs}
+  }
+})
+
+</script>
+
+<template>
+  <div class="dropdown">
+    <div :tabindex="useState().isEdit? 0:null" role="button" :class="useState().isEdit? 'link m-1':''">
+      <span v-if="種別マスタdocs[value]">{{種別マスタdocs[value]['種別名']}}</span>
+      <span v-else>選択されていません</span>
+    </div>
+
+    <ul tabindex="0"
+    class="menu menu-sm bg-white w-60 max-h-[40rem] overflow-auto dropdown-content z-[1] shadow rounded-box">
+        <li v-for=" 種別 of 種別マスタitems">
+          <a class=" truncate" @click="handleChange(種別['種別コード'])">{{種別['種別名']}}</a>
+        </li>
+    </ul>
+  </div>
+</template>
