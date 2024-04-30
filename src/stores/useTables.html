@@ -6,7 +6,7 @@ const useTables = defineStore('useTables', () => {
   const fetch自所属原資材docs=()=>new Promise((resolve)=>{
     google.script.run
       .withSuccessHandler(res=>{
-        自所属原資材docs.value=res
+        自所属原資材docs.value= structuredClone(res) //これをしとかないとuseFieldにセットした時に無限ループしてしまう
         resolve()
       })
       .withFailureHandler(err=>{
@@ -43,6 +43,8 @@ const useTables = defineStore('useTables', () => {
       .set使いまわし情報doc()
   }
 
-  return {自所属原資材docs, 使いまわし情報docs, fetch自所属原資材docs, fetch使いまわし情報docs, set原資材doc, set使いまわし情報doc}
+  const 自所属原資材items = computed(()=>Object.values(自所属原資材docs.value))
+
+  return {自所属原資材docs, 自所属原資材items, 使いまわし情報docs, fetch自所属原資材docs, fetch使いまわし情報docs, set原資材doc, set使いまわし情報doc}
 })
 </script>

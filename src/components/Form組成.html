@@ -1,35 +1,26 @@
 <script>
 
 export default defineComponent({
-  props:{種別コード:String},
-  setup(props){
-      const { 種別コード} = props
+  setup(){
 
-      // const {value:種別コード} = useField(()=>'種別コード',undefined)
-      const { remove, push, update, fields } = useFieldArray(()=>'組成', []);
-      console.log(1,fields.value)
+      const {value:種別コード} = useField(()=>'種別コード',undefined)
+
+      const { remove, push, update, fields } = useFieldArray(()=>'組成',[]);
 
       const edittingIdx = ref(-1)
 
-      const 構成temp = {構成コード:'' ,IDEA製品コード:'',IDEA製品名:'',使用量:0,使用量単位:'g'}
+      const 構成temp = {構成コード:null ,IDEA製品コード:null,IDEA製品名:null,使用量:0,使用量単位:'g'}
 
-      const {values:編集中構成, errors, setFieldValue, resetForm } = useForm({
-              initialValues:{組成コード:'',構成コード:'',IDEA製品コード:'',IDEA製品名:'',使用量:0,使用量単位:'g'},
-              validationSchema:{
-                  構成コード:yup.string(),
-                  IDEA製品コード:yup.string(),
-                  IDEA製品名:yup.string(),
-                  使用量:yup.number().min(0,'0以上を入力ください'),
-                  使用量単位:yup.string().oneOf(['μm','μg','g','%'])
-              }
-      })
+      const 編集中構成 = computed(()=>{
+        edittingIdx.value<0? 構成temp:fields[edittingIdx.value].value
+  })
 
       function 構成に反映(){
           const i = edittingIdx.value
-          update(i,{...編集中構成})
-          resetForm()
+          const newItem = Object.assign(fields[i],編集中構成.value)
+          update(i,newItem)
+          編集中構成.value = {} 
       }
-
 
       const {種別マスタdocs, IDEAマスタv2items} = useMasters()
 
@@ -38,9 +29,9 @@ export default defineComponent({
       const 候補のみ = ref(true)
 
       const 候補IDEAマスタitems = computed(() => {
-          if(!種別コード)return[]
+          if(!種別コード.value)return[]
 
-          let {候補小分類コードリスト} = 種別マスタdocs[種別コード]
+          let {候補小分類コードリスト} = 種別マスタdocs[種別コード.value]
           候補小分類コードリスト = 候補小分類コードリスト.map(e=> /^\d+$/.test(e)? Number(e):e)
 
           return IDEAマスタv2items
@@ -50,11 +41,9 @@ export default defineComponent({
               .sort((a,b)=>a['選択回数']>b['選択回数']? 1:-1)
       })
 
-      return {remove, push, update, fields, edittingIdx, 構成temp,
-        編集中構成, errors, setFieldValue, resetForm,
-        構成に反映, 検索word, 推奨のみ, 候補のみ, 候補IDEAマスタitems,
-        種別コード,
-        useState
+      return {remove, push, update, fields, 
+      edittingIdx, 構成temp, 編集中構成, 構成に反映, 検索word, 推奨のみ, 候補のみ, 候補IDEAマスタitems,
+      useState
       }
   }
 })
@@ -63,11 +52,12 @@ export default defineComponent({
 
 <template>
     <table class=" table table-sm !m-0">
+      <input v-model="edittingIdx">
         <tbody>
             <tr v-for="(f,i) of fields">
                 <td>
-                    <button type="button" class="link max-w-36 truncate" onclick="my_modal_1.showModal()" @click="edittingIdx=i">
-                      {{ f.value['IDEA製品名'] || '選択' }}
+                    <button class="link max-w-36 truncate" onclick="my_modal_1.showModal()" @click="edittingIdx=i;console.log(i)">
+                      {{i}}{{edittingIdx}}{{ f.value['IDEA製品名'] || '選択' }}
                     </button>
                 </td>
 
@@ -75,16 +65,17 @@ export default defineComponent({
                 <td>{{ f.value['使用量単位'] }}</td>
 
                 <td v-if="useState().isEdit">
-                    <button type="button" @click="remove(i)" class="btn btn-warning btn-xs truncate">削除</button>
+                    <button @click="remove(i)" class="btn btn-warning btn-xs truncate">削除</button>
                 </td>
             </tr>
         </tbody>
 
-        <button type="button" @click="push(構成temp)" class="btn btn-ghost btn-sm text-error "><span class="pl-5 pr-1">+</span>追加</button>
+        <button @click="push(構成temp)" class="btn btn-ghost btn-sm text-error "><span class="pl-5 pr-1">+</span>追加</button>
     </table>
     
     <dialog id="my_modal_1" class="modal">
-        <div class="modal-box">
+      {{編集中構成}}
+        <!-- <div class="modal-box">
             <h3 class="font-bold text-lg mt-0">素材を選択</h3>
 
             <div class="">
@@ -103,8 +94,9 @@ export default defineComponent({
                 </div>
 
                 <ul class=" border h-60 overflow-y-auto">
+                  {{edittingIdx}}
                     <li v-for="(item,i) of 候補IDEAマスタitems"  :key="i"
-                    @click="setFieldValue('IDEA製品コード',item['IDEA製品コード']);setFieldValue('IDEA製品名',item['IDEA製品名'])"
+                    @click=""
                     class="flex w-full cursor-pointer" :class="{'bg-gray-300': 編集中構成.IDEA製品コード===item['IDEA製品コード']}"
                     >
                         <div class=" truncate">{{ item['IDEA製品名'] }}</div>
@@ -131,6 +123,6 @@ export default defineComponent({
                 <button @click="構成に反映" class="btn btn-primary">反映</button>
                 <button class="btn">閉じる</button>
             </form>
-        </div>
+        </div> -->
     </dialog>
 </template>

@@ -7,13 +7,7 @@ const doGet=()=>{
 function require(filePath){
   let [folderName,fileName] = filePath.split('/')
 
-  if(folderName==='App'){
-    const content = HtmlService.createHtmlOutputFromFile(`src/App`).getContent()
-    const res = content
-      .replace(/<template>\n/,`<script type="text/x-template" id="app">`)
-      .replace(/<\/template>\n\n<script>/,'</script>  <script>')
-    return res
-  }
+  if(filePath==='App')fileName='App'
 
   const content = HtmlService.createHtmlOutputFromFile('src/' + filePath).getContent()
 
@@ -46,27 +40,4 @@ function require(filePath){
     return store
   }
 
-}
-
-function include(filePath=''){
-  var [folderName,fileName] = filePath.split('/')
-  if(folderName==='App')fileName='App'
-
-  if(folderName==='stores'){
-    return HtmlService.createHtmlOutputFromFile(`src/stores/${fileName}`).getContent()
-  }
-
-  if(folderName==='components' && fileName==='Index'){
-    const content = HtmlService.createHtmlOutputFromFile(`src/components/Index`).getContent()
-    const res = content.replaceAll('<template','<script').replaceAll('template>','script>')
-    return res
-  }
-
-  {
-    const content = HtmlService.createHtmlOutputFromFile(`src/${fileName==='App'? 'App':folderName+'/'+fileName}`).getContent()
-    const res = content
-      .replace(/<template>\n/,`<script type="text/x-template" id="${fileName.toLowerCase()}">`)
-      .replace(/<\/template>\n\n<script>/,'</script>  <script>')
-    return res    
-  }
 }

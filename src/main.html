@@ -47,9 +47,6 @@
       const { Grid,html,useSelector } = gridjs
     </script>
 
-    <?!= include('App') ?>
-
-
     <script type="module">
       import * as yup from 'https://cdn.jsdelivr.net/npm/yup@1.4.0/+esm';
 
@@ -74,15 +71,15 @@
           <?!= require('components/Detail') ?>
 
           <?!= require('views/Index') ?>
-          <?!= require('views/Composition') ?>
-          <?!= require('views/Assign') ?>
+
+          <?!= require('App') ?>
 
           const router = createRouter({
             history: createWebHashHistory(),
             routes:[
               { path: '/', name:'一覧', component: Index },
-              { path: '/component', name:'構成マスタ管理', component: Composition },
-              { path: '/assign', name:'記入担当割り振り', component: Assign },
+              // { path: '/component', name:'構成マスタ管理', component: Composition },
+              // { path: '/assign', name:'記入担当割り振り', component: Assign },
             ]
           })
 
