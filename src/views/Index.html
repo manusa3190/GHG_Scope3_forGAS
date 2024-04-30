@@ -48,7 +48,33 @@ defineComponent({
       get自所属users(), fetch自所属原資材docs(), fetch使いまわし情報docs(), fetchマスタ()
     ])
 
-    return {props}
+
+    const query = reactive({
+      onlyMyItems:true,
+      onlyIncomplete:true
+    })
+    watch(query,()=>{
+      if(!grid)return
+
+      let items = Object.values( useTables().自所属原資材docs)
+      if(query.onlyMyItems){
+        items = items.filter(item=>item['担当者メールアドレス']===currentUserEmail.innerText)
+      }
+      if(query.onlyIncomplete){
+        items = items.filter(item=>!item['構成コード'])
+      }
+
+      grid.updateConfig({data:items})
+      grid.forceRender()
+    })
+
+    const updateConfig = () =>{
+      grid.updateConfig({data:Object.values(useTables().自所属原資材docs)})
+      grid.forceRender()
+      useState().$patch({isLoading:false})
+    }
+
+    return {props, query}
   }
 })
 
@@ -57,8 +83,21 @@ defineComponent({
 <template>
 <div class="flex">
 
-  <div class="flex-1">
-    <table id="table" class="table" />
+  <!-- 左側 -->
+  <div class="flex-1 p-3">
+      <div class="flex gap-4">
+          <label class=" label max-w-44 cursor-pointer">
+            <input type="checkbox" class="checkbox checkbox-xs" v-model="query.onlyMyItems" />
+            <span class="label-text">自分の担当品目のみ</span> 
+          </label>
+
+          <label class=" label max-w-44 cursor-pointer">
+            <input type="checkbox" class="checkbox checkbox-xs" v-model="query.onlyIncomplete" />
+            <span class="label-text">未完了の品目のみ</span> 
+          </label>
+      </div>
+
+      <table id="table" class="table" />
   </div>
 
   <div class="w-96 bg-orange-100 p-3">

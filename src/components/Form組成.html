@@ -11,15 +11,12 @@ export default defineComponent({
 
       const 構成temp = {構成コード:null ,IDEA製品コード:null,IDEA製品名:null,使用量:0,使用量単位:'g'}
 
-      const 編集中構成 = computed(()=>{
-        edittingIdx.value<0? 構成temp:fields[edittingIdx.value].value
-  })
+      const 編集中構成 = ref({...構成temp})
 
       function 構成に反映(){
           const i = edittingIdx.value
-          const newItem = Object.assign(fields[i],編集中構成.value)
-          update(i,newItem)
-          編集中構成.value = {} 
+          update(i,編集中構成.value)
+          編集中構成.value = {...構成temp} 
       }
 
       const {種別マスタdocs, IDEAマスタv2items} = useMasters()
@@ -43,8 +40,7 @@ export default defineComponent({
 
       return {remove, push, update, fields, 
       edittingIdx, 構成temp, 編集中構成, 構成に反映, 検索word, 推奨のみ, 候補のみ, 候補IDEAマスタitems,
-      useState
-      }
+      useState}
   }
 })
 
@@ -52,12 +48,11 @@ export default defineComponent({
 
 <template>
     <table class=" table table-sm !m-0">
-      <input v-model="edittingIdx">
         <tbody>
             <tr v-for="(f,i) of fields">
                 <td>
-                    <button class="link max-w-36 truncate" onclick="my_modal_1.showModal()" @click="edittingIdx=i;console.log(i)">
-                      {{i}}{{edittingIdx}}{{ f.value['IDEA製品名'] || '選択' }}
+                    <button class="link max-w-36 truncate" onclick="my_modal_1.showModal()" @click="編集中構成={...f.value};edittingIdx=i">
+                      {{ f.value['IDEA製品名'] || '選択' }}
                     </button>
                 </td>
 
@@ -74,8 +69,7 @@ export default defineComponent({
     </table>
     
     <dialog id="my_modal_1" class="modal">
-      {{編集中構成}}
-        <!-- <div class="modal-box">
+        <div class="modal-box">
             <h3 class="font-bold text-lg mt-0">素材を選択</h3>
 
             <div class="">
@@ -94,9 +88,8 @@ export default defineComponent({
                 </div>
 
                 <ul class=" border h-60 overflow-y-auto">
-                  {{edittingIdx}}
                     <li v-for="(item,i) of 候補IDEAマスタitems"  :key="i"
-                    @click=""
+                    @click="編集中構成['IDEA製品コード']=item['IDEA製品コード'];編集中構成['IDEA製品名']=item['IDEA製品名']"
                     class="flex w-full cursor-pointer" :class="{'bg-gray-300': 編集中構成.IDEA製品コード===item['IDEA製品コード']}"
                     >
                         <div class=" truncate">{{ item['IDEA製品名'] }}</div>
@@ -108,13 +101,10 @@ export default defineComponent({
             <div>
                 <label class="label inline">
                     <span class=" label-text">使用量</span>
-                    <input type="number"
-                    :value="編集中構成.使用量" @change="setFieldValue('使用量',Number($event.target.value))"
-                    class=" input input-sm input-bordered max-w-20"> 
+                    <input type="number" v-model="編集中構成.使用量" class=" input input-sm input-bordered max-w-20">
                 </label>
 
-                <select class="select select-sm select-bordered w-18" 
-                :value="編集中構成.使用量単位" @change="setFieldValue('使用量単位',$event.target.value)">
+                <select class="select select-sm select-bordered w-18" v-model="編集中構成.使用量単位">
                     <option v-for="item of ['μm','μg','g','%']" :key="item" :value="item">{{ item }}</option>
                 </select>
             </div>
@@ -123,6 +113,6 @@ export default defineComponent({
                 <button @click="構成に反映" class="btn btn-primary">反映</button>
                 <button class="btn">閉じる</button>
             </form>
-        </div> -->
+        </div>
     </dialog>
 </template>
