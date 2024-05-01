@@ -42,10 +42,7 @@ defineComponent({
         data:自所属原資材items,
         className:{
           th:'!p-1 text-center',
-          td:'truncate !bg-inherit !py-0.5 text-center'
-        },
-        style:{
-          tr:(row,rowIndex)=> rowIndex===1? {className:'selected'}:{}
+          td:'truncate !bg-inherit !py-1 text-center',
         },
         sort:true,
         fixedHeader:true,
@@ -128,7 +125,7 @@ defineComponent({
   </div>
 
   <div class="w-96 bg-orange-100 p-3 flex flex-col">
-     <div v-if=" !Object.keys(form.values).length" class="self-center">品目を選んでください</div>
+     <div v-if=" Object.keys(form.values).length < 2" class="self-center">品目を選んでください</div>
      <Detail v-else :form="form"/>
   </div>
 

@@ -20,7 +20,6 @@
     <!--gridjs-->
     <script src="https://cdn.jsdelivr.net/npm/gridjs/dist/gridjs.umd.js"></script>
     <link href="https://unpkg.com/gridjs/dist/theme/mermaid.min.css" rel="stylesheet" />  
-
   </head>
   <body class="">
     <div id="currentUserEmail" hidden><?= currentUserEmail ?></div>
@@ -70,6 +69,7 @@
           <?!= require('components/SelectComposition') ?>
           <?!= require('components/Detail') ?>
 
+          <?!= require('views/Composition') ?>
           <?!= require('views/Assign') ?>
           <?!= require('views/Index') ?>
 
@@ -79,7 +79,7 @@
             history: createWebHashHistory(),
             routes:[
               { path: '/', name:'一覧', component: Index },
-              // { path: '/component', name:'構成マスタ管理', component: Composition },
+              { path: '/composition', name:'構成マスタ管理', component: Composition },
               { path: '/assign', name:'記入担当割り振り', component: Assign },
             ]
           })

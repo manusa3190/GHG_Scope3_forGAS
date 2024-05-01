@@ -18,12 +18,11 @@ const useTables = defineStore('useTables', () => {
   const fetch使いまわし情報docs=()=>new Promise((resolve)=>{
     google.script.run
       .withSuccessHandler(res=>{
-        使いまわし情報docs.value=res
+        使いまわし情報docs.value=structuredClone(res)
         resolve()
       })
       .get使いまわし情報docs()
   })
-
 
   const set原資材doc=(data)=>{
     google.script.run
@@ -37,7 +36,7 @@ const useTables = defineStore('useTables', () => {
   const set使いまわし情報doc=(data)=>{
       google.script.run
       .withSuccessHandler(res=>{
-        使いまわし情報docs.value[res['構成コード']]=res
+        使いまわし情報docs.value = structuredClone(res)
         resolve()
       })
       .set使いまわし情報doc()

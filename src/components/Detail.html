@@ -97,11 +97,14 @@ export default defineComponent({
       </div>
     </div>
 
+    <div v-if="$route.name==='一覧'" class="">
+      <h2>品名</h2>
+      <div class="pl-6">{{values['品名']}}</div>
+    </div>
 
     <div v-if="$route.name==='構成マスタ管理'" class="">
-      <div class="pl-6">
-          <FormInput name="構成名" />
-      </div>
+      <h2>構成名</h2>
+      <FormInput name="構成名" />
     </div>
 
     <div class="">

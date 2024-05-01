@@ -7,11 +7,26 @@ defineComponent({
 
     const {自所属原資材docs, 使いまわし情報docs, fetch自所属原資材docs, fetch使いまわし情報docs, set原資材doc, set使いまわし情報doc} = useTables()
 
-    const {自所属users} = useUsers()
-    const currentUser = 自所属users.find(user=>user.isCurrentUser)
+    const {currentUser} = useUsers()
 
-    const 構成item = ref(null)
-    watch(構成item,()=> useState().$patch({isEdit:true}))
+    const form = useForm({
+      initialValues:{
+        構成コード:null
+      },
+      validationSchema: {
+        種別コード:yup.string().required('必須です'),
+        容リ法分類:yup.string(),
+        組成:yup.array().min(1,'組成は最低ひとつは入れてください').of(
+          yup.object().shape({
+             構成コード:yup.string().nullable(),
+             IDEA製品コード:yup.number(),
+             IDEA製品名:yup.string(),
+             使用量:yup.number().positive('正の値にしてください'),
+             使用量単位:yup.string(),
+          })
+        )
+      }
+    })
 
     var grid
 
@@ -37,7 +52,10 @@ defineComponent({
         grid.on('rowClick',(...args)=>{
             const {cells} = args[1]
             const 構成コード = cells[columns.findIndex(c=>c==='構成コード'||c.id==='構成コード')].data
-            構成item.value = {...使いまわし情報docs[構成コード]}
+            const item = 使いまわし情報docs[構成コード]
+            form.setValues(item)
+
+            useState().$patch({isEdit:true})
         })
 
         grid.render(document.getElementById('grid-elem'))
@@ -75,7 +93,7 @@ defineComponent({
       useState().$patch({isLoading:false})
     }
 
-    return {query, 構成item, useState, updateConfig }
+    return {query, form, useState, updateConfig }
   }
 })
 
@@ -114,14 +132,10 @@ defineComponent({
     </div>
 
     <!-- 右側 -->
-    <div class="bg-orange-100 h-full w-96 flex-none p-3">
-        <div v-if="!構成item" class="">構成を選んでください</div>
-
-        <div v-else class=" h-full flex flex-col">
-            <Detail :key="構成item? 構成item['構成コード']:'0'" :原資材item="構成item" @updated="updateConfig"></Detail>
-        </div>
-
-    </div>
+  <div class="w-96 bg-orange-100 p-3 flex flex-col">
+     <div v-if=" Object.keys(form.values).length < 2" class="self-center">構成を選んでください</div>
+     <Detail v-else :form="form"/>
+  </div>
 
 </div>
 </template>
