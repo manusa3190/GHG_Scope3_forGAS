@@ -29,7 +29,7 @@ defineComponent({
 </script>
 
 <template>
-  <button type="button" class=" link " @click="dialog.showModal()">登録済み構成から選択</button>
+  <a class=" link " @click="dialog.showModal()">登録済み構成から選択</a>
 
   <dialog class="modal" ref="dialog">
       <div class="modal-box">
@@ -52,7 +52,7 @@ defineComponent({
           </table>
 
           <div class="modal-action">
-              <button type="button" class="btn btn-ghost" @click="dialog.close()">閉じる</button>
+              <button class="btn btn-ghost" @click="dialog.close()">閉じる</button>
           </div>
       </div>
   </dialog>

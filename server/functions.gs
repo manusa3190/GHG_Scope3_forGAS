@@ -1,4 +1,4 @@
-ENV = 'DEV'
+ENV = PropertiesService.getScriptProperties().getProperty('ENV')
 
 const useRuntimeConfig = (key) => globalThis[key+'_'+ENV]
 

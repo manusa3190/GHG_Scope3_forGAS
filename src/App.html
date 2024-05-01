@@ -6,22 +6,7 @@ export default defineComponent({
     const router = useRouter()
     const routes = router.getRoutes()
 
-    const navigateTo = (path) => router.push(path)
-
-    const form = useForm({
-      validationSchema: {
-        id:yup.number(),
-        name:yup.string().min(4,'4文字以上にしてください'),
-        skills:yup.array().of(
-          yup.object().shape({
-            型: yup.string().required('型は必須です').min(2, '型は2文字以上である必要があります'),
-            技名: yup.string().required('技名は必須です').min(2, '技名は2文字以上である必要があります')
-          })
-        )
-      }
-    })
-
-    return {currentUserEmail, routes, navigateTo, form}
+    return {currentUserEmail, routes}
   }
 })
 
@@ -36,7 +21,7 @@ export default defineComponent({
     <nav class="w-full navbar bg-base-300">
       <div class="flex-none">
         <label for="main-drawer" aria-label="open sidebar" class="btn btn-square btn-ghost">
-          <!-- <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block stroke-current"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg> -->
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block stroke-current"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
         </label>
       </div>
 
@@ -49,7 +34,7 @@ export default defineComponent({
       <template v-if="Component">
         <Suspense>
           <main class="text-sm w-full">
-            <component :is="Component" :form="form"></component>
+            <component :is="Component"></component>
           </main>
 
           <template #fallback>
@@ -68,7 +53,7 @@ export default defineComponent({
     <ul class="menu p-4 w-54 min-h-full bg-base-200 text-base-content">
       <!-- Sidebar content here -->
       <li v-for="r of routes">
-        <a @click="navigateTo(r.path)">{{r.name}}</a>
+        <RouterLink :to="r.path">{{r.name}}</RouterLink>
       </li>
     </ul>
   

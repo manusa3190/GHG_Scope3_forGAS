@@ -1,9 +1,10 @@
 <script>
 
 defineComponent({
-  props:{原資材item:Object},
+  props:{form:Object},
   setup(props){
-    const {原資材item} = props
+    const {form} = props
+    const {handleSubmit, values, errors, meta, setValues} = form
 
     const 構成名 = ref('')
 
@@ -14,9 +15,12 @@ defineComponent({
         alert('構成名をつけてください')
         return
       }
-      const item = {...原資材item,構成名:構成名.value}
-      item['使いまわし'] = true
-      console.log(item)
+
+      const item = {
+        ...values,
+        構成名:構成名.value,
+        使いまわし:true
+      }
 
       google.script.run
         .withSuccessHandler( async res=>{
@@ -30,14 +34,14 @@ defineComponent({
       
     }
 
-    return {構成名, dialog, record}
+    return {構成名, values, dialog, record}
   }
 })
 
 </script>
 
 <template>
-    <button type="button" class=" link" @click="dialog.showModal()">この構成を登録</button>
+    <button class=" link" @click="dialog.showModal()">この構成を登録</button>
 
     <dialog class="modal" ref="dialog">
     <div class="modal-box">
@@ -50,36 +54,13 @@ defineComponent({
         <div class=" border m-2 p-2 flex flex-col space-y-3">
             <div class=" card-title">構成情報</div>
 
-            <div class="form-control max-w-[150px]">
-                <label class="label ">
-                    <span class="label-text">容リ法対象</span> 
-                    <input type="checkbox" :checked="原資材item['容リ法対象フラグ']" class="checkbox checkbox-sm disabled:opacity-100" disabled/>
-                </label>
-            </div>
+            <pre>{{values}}</pre>
 
-            <div class="form-control max-w-[150px]">
-                <label class="label ">
-                    <span class="label-text">プラスチック</span> 
-                    <input type="checkbox" :checked="原資材item['プラスチックフラグ']" class="checkbox checkbox-sm disabled:opacity-100" disabled/>
-                </label>
-            </div>
-
-
-            <dl>
-                <dt>構成</dt>
-                <table>
-                    <tr v-for="構成 of 原資材item['構成']">
-                        <td>{{構成['IDEA製品名']}}</td>
-                        <td>{{構成['使用量']}}</td>
-                        <td>{{構成['使用量単位']}}</td>
-                    </tr>
-                </table>
-            </dl>
         </div>
 
         <div class="modal-action space-x-3">
-            <button type="button" class="btn btn-primary" @click="record">登録</button>
-            <button type="button" class="btn" @click="dialog.close()">閉じる</button>
+            <button class="btn btn-primary" @click="record">登録</button>
+            <button class="btn" @click="dialog.close()">閉じる</button>
         </div>
     </div>
     </dialog>

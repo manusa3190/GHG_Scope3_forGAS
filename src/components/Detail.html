@@ -60,18 +60,22 @@ export default defineComponent({
     <div v-if="!meta.valid" role="alert" class="alert alert-warning p-0">
         <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
 
-        <table class=" text-xs">
+        <table v-if="Object.keys(errors).length" class=" text-xs">
           <tr v-for=" message, fieldName in errors " >
             <td>{{fieldName}}：</td> <td>{{ message }}</td>
           </tr>
         </table>
+
+        <div v-else>入力したデータに不足があります</div>
         
     </div>
 
     <details class="collapse bg-base-200">
       <summary class="collapse-title text-sm">デバッグ用（本番では消します）</summary>
       <div class="collapse-content"> 
-        <pre class=" text-[6pt]">{{values}}</pre>
+        <pre class=" text-[3pt]">{{values}}</pre>
+
+        <pre class=" text-[3pt]">{{errors}}</pre>
 
         <pre>meta:{{meta.dirty}}, valid:{{meta.valid}}</pre>
       </div>
@@ -79,12 +83,12 @@ export default defineComponent({
 
     <div>
       <div v-if="!useState().isEdit"  class="flex justify-between">
-          <RecordComposition v-if="$route.name==='一覧'" ></RecordComposition>
+          <RecordComposition v-if="$route.name==='一覧'" :form="form" ></RecordComposition>
           <button type="button" class="btn btn-primary" @click="useState().$patch({isEdit:true})">再編集</button>
       </div>
 
       <div v-else class="flex w-full">
-          <SelectComposition v-if="$route.name==='一覧'" :setValues="setValues"></SelectComposition>
+          <SelectComposition v-if="$route.name==='一覧'" :form="form"></SelectComposition>
           <div class="flex-1"></div>
           <button v-if="meta.dirty" type="button" class=" btn btn-primary" 
           :disabled="!meta.valid" @click="save()">保存</button>
@@ -103,7 +107,6 @@ export default defineComponent({
     <div class="">
       <h2>種別</h2>
       <div class="pl-6">
-          <!-- <FormSelect name="種別" :items="種別マスタitems" ></FormSelect> -->
           <Form種別 name="種別コード" :items="種別マスタitems" />
       </div>
     </div>
@@ -111,8 +114,8 @@ export default defineComponent({
     <div class="">
       <h2>関連法規</h2>
       <div class="pl-6">
-          <Form容リ法 />
-          <FormCheckbox name="プラスチックフラグ" />
+          <Form容リ法 v-if="values['品目区分名']==='資材'" />
+          <FormCheckbox name="プラスチックフラグ" v-if="values['品目区分名']==='資材'" />
       </div>
     </div>
 
@@ -132,7 +135,7 @@ export default defineComponent({
     </div>
 
     <div class="">
-      <h2>構成</h2>
+      <h2>組成</h2>
       
       <div v-if="!values['種別コード']">先に種別を選んでください</div>
 

@@ -26,7 +26,7 @@ defineComponent({
 
         hot = new Handsontable(document.getElementById('example'), {
           columns:columnsForHeader,
-          data:自所属原資材items,
+          data:自所属原資材items.slice(0,300),
           rowHeaders: true,
           colHeaders:columns,
           height: 'auto',

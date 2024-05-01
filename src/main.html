@@ -70,6 +70,7 @@
           <?!= require('components/SelectComposition') ?>
           <?!= require('components/Detail') ?>
 
+          <?!= require('views/Assign') ?>
           <?!= require('views/Index') ?>
 
           <?!= require('App') ?>
@@ -79,7 +80,7 @@
             routes:[
               { path: '/', name:'一覧', component: Index },
               // { path: '/component', name:'構成マスタ管理', component: Composition },
-              // { path: '/assign', name:'記入担当割り振り', component: Assign },
+              { path: '/assign', name:'記入担当割り振り', component: Assign },
             ]
           })
 

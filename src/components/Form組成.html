@@ -29,7 +29,7 @@ export default defineComponent({
           if(!種別コード.value)return[]
 
           let {候補小分類コードリスト} = 種別マスタdocs[種別コード.value]
-          候補小分類コードリスト = 候補小分類コードリスト.map(e=> /^\d+$/.test(e)? Number(e):e)
+          // 候補小分類コードリスト = 候補小分類コードリスト.map(e=> /^\d+$/.test(e)? Number(e):e)
 
           return IDEAマスタv2items
               .filter(item=> 候補のみ.value? 候補小分類コードリスト.includes(item['小分類コード']):true)
