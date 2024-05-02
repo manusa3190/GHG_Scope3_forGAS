@@ -23,7 +23,9 @@ test1.setTest('webPage',()=>{
 
 test1.setTest('get自所属原資材docs',()=>{
   const res = get自所属原資材docs()
-  console.log(res)
+  const [sampleKey, sampleItem] = Object.entries(res).shift()
+  console.log(sampleKey)
+  console.log(sampleItem)
 
   return {expect:true, result:true}
 })
@@ -39,5 +41,5 @@ test1.setTest('getMasters',()=>{
 })
 
 function exec(){
-  test1.run({only:'get自所属原資材docs'})
+  test1.run({only:['get自所属users','get自所属原資材docs']})
 }

@@ -28,7 +28,7 @@ function get自所属原資材docs(所属名=''){
   const 原資材調査spreadsheet = SpreadsheetApp.openById(useRuntimeConfig('原資材調査'))
   const {items} = new Sheet({spreadsheet:原資材調査spreadsheet,sheetName:'原資材テーブル'})
   const 情報テーブル = new Sheet({spreadsheet:原資材調査spreadsheet,sheetName:'情報テーブル'})
-  const {items:構成テーブルitems} = new Sheet({spreadsheet:原資材調査spreadsheet,sheetName:'構成テーブル'})
+  const {items:組成テーブルitems} = new Sheet({spreadsheet:原資材調査spreadsheet,sheetName:'組成テーブル'})
 
   var 自所属items = []
 
@@ -40,15 +40,27 @@ function get自所属原資材docs(所属名=''){
     自所属items = items
   }
 
-  const empty情報item = 情報テーブル.columns.reduce((obj,colName)=>Object.assign(obj,{[colName]:null}),{})
+  const empty情報item = {
+    構成名:null,
+    使いまわし:false,
+    作成者メールアドレス:null,
+    作成者所属名:null,
+    更新日時:null,
+    在庫単位あたり重量:0,
+    使用単位あたり重量:0,
+    種別コード:'',
+    容リ法分類:'対象外',
+    プラスチックフラグ:false,
+    製法コード:'',
+    組成:[]
+  }
   自所属items.forEach(原資材item=>{ // 冗長な書き方であるが、スピードを優先している
       const {構成コード} = 原資材item
       if(構成コード){
         Object.assign(原資材item,情報テーブル.docs[構成コード])
-        原資材item['組成'] = 構成テーブルitems.filter(item=>item['構成コード']===構成コード)
+        原資材item['組成'] = 組成テーブルitems.filter(item=>item['構成コード']===構成コード)
       }else{
         Object.assign(原資材item, empty情報item)
-        原資材item['組成'] = []
       }
   })
 
@@ -58,14 +70,14 @@ function get自所属原資材docs(所属名=''){
 function get使いまわし情報docs(){
   const 原資材調査spreadsheet = SpreadsheetApp.openById(useRuntimeConfig('原資材調査'))
   let {items} = new Sheet({spreadsheet:原資材調査spreadsheet,sheetName:'情報テーブル'})
-  let {items:構成items} = new Sheet({spreadsheet:原資材調査spreadsheet,sheetName:'構成テーブル'})
+  let {items:組成items} = new Sheet({spreadsheet:原資材調査spreadsheet,sheetName:'組成テーブル'})
 
   const 情報items = items
       .filter(item=>item['使いまわし'])
       .map(item=>{
         return {
           ...item,
-          構成:構成items.filter(構成item=>構成item['構成コード']===item['構成コード'])
+          組成:組成items.filter(組成item=>組成item['構成コード']===item['構成コード'])
         }
       })
   return 情報items.reduce((docs,item)=>Object.assign(docs,{[item['構成コード']]:item}),{})
@@ -124,23 +136,25 @@ function set原資材(data){
       return newItem
     }
 
+    // 使いまわしでないものは新規作成
     const 情報テーブル = new Sheet({spreadsheet:原資材調査spreadsheet,sheetName:'情報テーブル'})
-    const 構成テーブル = new Sheet({spreadsheet:原資材調査spreadsheet,sheetName:'構成テーブル'})    
+    const 組成テーブル = new Sheet({spreadsheet:原資材調査spreadsheet,sheetName:'組成テーブル'})    
 
     Object.assign(newItem,data)
 
     if(!newItem['構成コード']){
       const 構成コード = 情報テーブル.getNewId()
       newItem['構成コード'] = 構成コード
-      newItem['構成'].forEach(item=>item['構成コード']=構成コード)
+      newItem['組成'].forEach(item=>item['構成コード']=構成コード)
     }
 
+    newItem['構成名'] = newItem['品名']+'_構成'
     newItem['作成者メールアドレス'] = data['作成者メールアドレス']
     newItem['作成者名'] = data['作成者名']     
 
     原資材テーブル.setItem(newItem)
     情報テーブル.setItem(newItem)
-    構成テーブル.setItems(newItem['構成'])    
+    組成テーブル.setItems(newItem['組成'])    
 
     return newItem
   }catch(err){
@@ -156,18 +170,12 @@ function set情報and構成(data){
     lock.waitLock(10000)
     const 原資材調査spreadsheet = SpreadsheetApp.openById(useRuntimeConfig('原資材調査'))
     const 情報テーブル = new Sheet({spreadsheet:原資材調査spreadsheet,sheetName:'情報テーブル'})
-    const 構成テーブル = new Sheet({spreadsheet:原資材調査spreadsheet,sheetName:'構成テーブル'})
-
-    // if(!data['構成コード']){
-    //   const 構成コード = 情報テーブル.getNewId()
-    //   data['構成コード'] =  構成コード
-    //   data['構成'].forEach(item=>item['構成コード']=構成コード)
-    // }
+    const 組成テーブル = new Sheet({spreadsheet:原資材調査spreadsheet,sheetName:'組成テーブル'})
 
     data['更新日時'] = new Date()
 
     情報テーブル.setItem(data)
-    構成テーブル.setItems(data['構成'])
+    組成テーブル.setItems(data['組成'])
 
     data['更新日時'] = data['更新日時'].toUTCString()
 
@@ -186,10 +194,10 @@ function delete情報and構成(data){
     lock.waitLock(10000)
     const 原資材調査spreadsheet = SpreadsheetApp.openById(useRuntimeConfig('原資材調査'))
     const 情報テーブル = new Sheet({spreadsheet:原資材調査spreadsheet,sheetName:'情報テーブル'})
-    const 構成テーブル = new Sheet({spreadsheet:原資材調査spreadsheet,sheetName:'構成テーブル'})
+    const 組成テーブル = new Sheet({spreadsheet:原資材調査spreadsheet,sheetName:'組成テーブル'})
 
     情報テーブル.remove(data)
-    data['構成'].forEach(構成item=>構成テーブル.remove(構成item['構成コード']))
+    data['組成'].forEach(組成item=>組成テーブル.remove(組成item['組成コード']))
 
     return data
   }catch(err){

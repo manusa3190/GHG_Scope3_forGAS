@@ -24,6 +24,7 @@ const useTables = defineStore('useTables', () => {
       .get使いまわし情報docs()
   })
 
+
   const set原資材doc=(data)=>{
     google.script.run
       .withSuccessHandler(res=>{
@@ -36,7 +37,7 @@ const useTables = defineStore('useTables', () => {
   const set使いまわし情報doc=(data)=>{
       google.script.run
       .withSuccessHandler(res=>{
-        使いまわし情報docs.value = structuredClone(res)
+        使いまわし情報docs.value[res['構成コード']]=res
         resolve()
       })
       .set使いまわし情報doc()

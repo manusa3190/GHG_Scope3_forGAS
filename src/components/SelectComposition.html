@@ -1,7 +1,7 @@
 <script>
 
 defineComponent({
-  props:{setValues:Function},
+  props:{form:Object},
   setup(props){
     const dialog = ref(null)
 
@@ -18,7 +18,7 @@ defineComponent({
           構成item[key]=null
         }
       }
-      props.setValues(構成item)
+      props.form.setValues({...構成item})
       dialog.value.close()
     }
 

@@ -11,10 +11,10 @@ defineComponent({
 
     const form = useForm({
       initialValues:{
-        構成コード:null
+        構成コード:null,
       },
       validationSchema: {
-        種別コード:yup.string().required('必須です'),
+        種別コード:yup.string().nullable(),
         容リ法分類:yup.string(),
         組成:yup.array().min(1,'組成は最低ひとつは入れてください').of(
           yup.object().shape({
@@ -52,10 +52,12 @@ defineComponent({
         grid.on('rowClick',(...args)=>{
             const {cells} = args[1]
             const 構成コード = cells[columns.findIndex(c=>c==='構成コード'||c.id==='構成コード')].data
-            const item = 使いまわし情報docs[構成コード]
-            form.setValues(item)
 
-            useState().$patch({isEdit:true})
+            const data = 使いまわし情報docs[構成コード]
+
+            form.setValues(data)
+
+            useState().$patch({isEdit: true})
         })
 
         grid.render(document.getElementById('grid-elem'))
@@ -93,7 +95,7 @@ defineComponent({
       useState().$patch({isLoading:false})
     }
 
-    return {query, form, useState, updateConfig }
+    return {form, query, useState, updateConfig }
   }
 })
 
@@ -102,7 +104,7 @@ defineComponent({
 <template>
 <div class="flex justify-between h-full w-screen">
     <!-- 左側 -->
-    <div class="flex-1">
+    <div class="flex-1 p-3">
         <div>
             <div class="border grid grid-cols-6">
 
@@ -132,10 +134,14 @@ defineComponent({
     </div>
 
     <!-- 右側 -->
-  <div class="w-96 bg-orange-100 p-3 flex flex-col">
-     <div v-if=" Object.keys(form.values).length < 2" class="self-center">構成を選んでください</div>
-     <Detail v-else :form="form"/>
-  </div>
+    <div class="bg-orange-100 h-full w-96 flex-none p-3">
+        <div v-if="!form.values['構成コード']" class="">構成を選んでください</div>
+
+        <div v-else class=" h-full flex flex-col">
+            <Detail :form="form" @updated="updateConfig"></Detail>
+        </div>
+
+    </div>
 
 </div>
 </template>

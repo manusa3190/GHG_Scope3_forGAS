@@ -4,6 +4,7 @@ export default defineComponent({
   components:{RecordComposition,SelectComposition,Form種別,Form容リ法, FormSelect, FormCheckbox, Form組成, FormInput},
   props:{form:Object},
   setup(props,{emit}){
+    const route = useRoute()
 
     const {form} = props
     const {handleSubmit, values, errors, meta, setValues} = form
@@ -24,7 +25,9 @@ export default defineComponent({
         google.script.run
           .withSuccessHandler( async res=>{
              alert(`成功。${JSON.stringify(res)}`)
+             console.log(1)
              await Promise.all([fetch自所属原資材docs(),fetch使いまわし情報docs()])
+             console.log(2)
              emit('updated')
           })
           .withFailureHandler(err=>{
@@ -90,21 +93,23 @@ export default defineComponent({
       <div v-else class="flex w-full">
           <SelectComposition v-if="$route.name==='一覧'" :form="form"></SelectComposition>
           <div class="flex-1"></div>
-          <button v-if="meta.dirty" type="button" class=" btn btn-primary" 
-          :disabled="!meta.valid" @click="save()">保存</button>
-          <button v-if="meta.dirty" type="button" class=" btn btn-ghost" 
-          @click="useState().$patch({isEdit:false})">キャンセル</button>
+          <button v-if="meta.dirty" class=" btn btn-primary" :disabled="!meta.valid" @click="save()">保存</button>
+          <button v-if="meta.dirty" class=" btn btn-ghost" @click="form.setValues({});useState().$patch({isEdit:false})">キャンセル</button>
       </div>
     </div>
 
     <div v-if="$route.name==='一覧'" class="">
-      <h2>品名</h2>
-      <div class="pl-6">{{values['品名']}}</div>
+      <h2>選択中の品目</h2>
+      <div class="pl-6">
+          <h3>{{values['品名']}}</h3>
+      </div>
     </div>
 
     <div v-if="$route.name==='構成マスタ管理'" class="">
       <h2>構成名</h2>
-      <FormInput name="構成名" />
+      <div class="pl-6">
+          <FormInput name="構成名" />
+      </div>
     </div>
 
     <div class="">

@@ -20,6 +20,7 @@
     <!--gridjs-->
     <script src="https://cdn.jsdelivr.net/npm/gridjs/dist/gridjs.umd.js"></script>
     <link href="https://unpkg.com/gridjs/dist/theme/mermaid.min.css" rel="stylesheet" />  
+
   </head>
   <body class="">
     <div id="currentUserEmail" hidden><?= currentUserEmail ?></div>
@@ -69,8 +70,8 @@
           <?!= require('components/SelectComposition') ?>
           <?!= require('components/Detail') ?>
 
-          <?!= require('views/Composition') ?>
           <?!= require('views/Assign') ?>
+          <?!= require('views/Composition') ?>
           <?!= require('views/Index') ?>
 
           <?!= require('App') ?>
