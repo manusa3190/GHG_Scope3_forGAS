@@ -60,8 +60,8 @@ webPageTest.setTest('Detail',()=>{
 })
 
 function exec(){
-  webPageTest.run({only:['doGet']})
-  // test1.run({only:['get自所属users','sync自所属原資材docs','syncMasters']})
+  // webPageTest.run({only:['doGet']})
+  test1.run({only:['get自所属users','sync自所属原資材docs','syncMasters']})
 
 
 }

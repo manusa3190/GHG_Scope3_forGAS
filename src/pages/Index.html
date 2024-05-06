@@ -22,7 +22,10 @@ export default defineComponent({
 
       onMounted(()=>{
 
-        const columns = ['品目コード','品名','取引先名',
+        const columns = [
+          {id:'品目コード',name:'品目コード',width:'130px'},
+          {id:'品名', name:'品名', width:'250px'},
+          {id:'取引先名', name:'取引先名', width:'150px'},
           {id:'担当者名', name:'担当者名', formatter: (cell, row) => cell? html(`<div>${cell}</div>`):html(`<div>担当者なし</div>`)},
           {id:'構成コード',hidden:true},
           {id:'構成コード',name:'登録',formatter: (cell, row) => cell? html(`<div>済</div>`):html(`<div></div>`)}
@@ -32,10 +35,13 @@ export default defineComponent({
           columns,
           data:Object.values( useTables().自所属原資材docs ),
           className:{
-            td:'max-w-52 truncate'
+            th:'!p-1 text-center',
+            td:'max-w-52 truncate !bg-inherit !py-0.5 text-center'
           },
-          height:'900px',
+          height:'800px',
           sort:true,
+          fixedHeader:true,
+          pagenation:{limit:30}
         })
 
         grid.on('rowClick',(...args)=>{
@@ -78,7 +84,27 @@ export default defineComponent({
           useState().$patch({isLoading:false})
         })
 
-      return {form, save}
+      const query = reactive({
+        onlyMyItems:true,
+        onlyIncomplete:true
+      })
+
+      watch(query,()=>{
+        if(!grid)return
+
+        let items = Object.values( useTables().自所属原資材docs)
+        if(query.onlyMyItems){
+          items = items.filter(item=>item['担当者メールアドレス']===currentUserEmail.innerText)
+        }
+        if(query.onlyIncomplete){
+          items = items.filter(item=>!item['構成コード'])
+        }
+
+        grid.updateConfig({data:items})
+        grid.forceRender()
+      })
+
+      return {form, save query}
   }
 })
 
@@ -88,9 +114,19 @@ export default defineComponent({
   <div class="flex justify-between h-full w-screen">
     <!-- 左側 -->
     <div>
-      <div class=" overflow-x-scroll p-2">
-        <table id="index" class=" border table table-sm w-[500px]" />
+      <div class="flex gap-4">
+        <label class=" label max-w-44 cursor-pointer">
+          <input type="checkbox" class="checkbox checkbox-xs" v-model="query.onlyMyItems" />
+          <span class="label-text">自分の担当品目のみ</span> 
+        </label>
+
+        <label class=" label max-w-44 cursor-pointer">
+          <input type="checkbox" class="checkbox checkbox-xs" v-model="query.onlyIncomplete" />
+          <span class="label-text">未完了の品目のみ</span> 
+        </label>
       </div>
+
+      <table id="index" class=" border table table-sm w-[500px]" />
     </div>
 
     <!-- 右側ウィンドウ -->

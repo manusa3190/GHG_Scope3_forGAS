@@ -150,7 +150,8 @@ function set担当者(data){ // data:{品目コード, 品名, 担当者メー�
     })
 
     原資材テーブル.setItems(newItems)
-    return data
+
+    return 'OK'
   }catch(err){
     throw(err)
   }finally{

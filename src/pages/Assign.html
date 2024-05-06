@@ -2,11 +2,8 @@
 
 defineComponent({
   async setup(){
-
-    const {自所属users} = useUsers()
-    const myself = 自所属users.find(user=>user.isCurrentUser)
-
-    const {自所属原資材docs} = useTables()
+    const {currentUser, 自所属users} = useUsers()
+    const {自所属原資材docs, sync自所属原資材docs} = useTables()
 
     const columns = ['品目コード','品名','担当者メールアドレス']
 
@@ -45,31 +42,34 @@ defineComponent({
     })
 
     function save(){
+      useState().$patch({isLoading:true})
 
       const 自所属usersDocs = 自所属users.reduce((docs,user)=>Object.assign(docs,{[user['メールアドレス']]:user['従業員名']}),{})
 
       const values = hot.getData()
 
       const items = values.map(row=>{
-            return columns.reduce((item,colName,idx)=>Object.assign(item,{[colName]:row[idx]}),{})
-          })
-          .filter(item=>item['担当者メールアドレス'])
-          .map(item=>{
-            item['担当者名'] = 自所属usersDocs[item['担当者メールアドレス']]
-            return item
-          })
-
-      google.script.run
-        .withSuccessHandler(res=>{
-          alert('担当者割り振りを保存しました')
+          return columns.reduce((item,colName,idx)=>Object.assign(item,{[colName]:row[idx]}),{})
         })
-        .withFailureHandler(err=>{
-          alert(`担当者割り振りの保存に失敗しました。エラーメッセージ：${err}`)
+        .filter(item=>item['担当者メールアドレス'])
+        .map(item=>{
+          item['担当者名'] = 自所属usersDocs[item['担当者メールアドレス']]
+          return item
         })
-        .set担当者(items)
+      
+        google.script.run
+          .withSuccessHandler(async res =>{
+            alert('担当者割り振りを保存しました')
+            await sync自所属原資材docs()
+            useState().$patch({isLoading:false})
+          })
+          .withFailureHandler(err=>{
+            alert(`担当者割り振りの保存に失敗しました。エラーメッセージ：${err}`)
+          })
+          .set担当者(items)
     }
 
-    return {save, myself}
+    return {save, currentUser}
   }
 })
 
@@ -91,7 +91,7 @@ defineComponent({
     <!-- 右側 -->
     <div class="bg-orange-100 h-full w-96 flex-none p-3">
 
-      <div>{{ myself['所属名'] }}の品目を表示中</div>
+      <div>{{ currentUser['所属名'] }}の品目を表示中</div>
 
       <table id="従業員table"></table>
       

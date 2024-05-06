@@ -27,7 +27,7 @@ export default defineComponent({
 
       const 検索word = ref('')
       const 推奨のみ = ref(true)
-      const 候補のみ = ref(true)
+      const 候補のみ = ref(false)
 
       const 候補IDEAマスタitems = computed(() => {
           if(!種別コード.value)return[]
