@@ -1,9 +1,10 @@
 <script>
-const useState = defineStore('state',()=> {
-  const isEdit = ref(false)
-  const isLoading = ref(false)
+export default defineStore('useState',()=>{
+    const isEdit = ref(false)
+    const isLoading = ref(false)
+    const initialized = ref(false)
 
-  return {isEdit, isLoading}
+    return {isEdit, isLoading, initialized}
 })
 
 </script>

@@ -1,6 +1,9 @@
-<script>
+<script lang="ts">
+import { defineComponent } from 'vue'
+import useState from '@/stores/useState';
+import { useField } from 'vee-validate'
 
-defineComponent({
+export default defineComponent({
   props:{
     name: String,
     type: String,

@@ -1,0 +1,149 @@
+<script lang="ts">
+
+export default defineComponent({
+    components:{Detail},
+    setup() {
+        const form = useForm({
+            validationSchema: yup.object({
+                構成コード: yup.string().required(),
+                種別コード: yup.string(),
+                組成: yup.array().min(1,'最低一つは選んでください').of(yup.object({
+                    IDEA製品コード:yup.string().required('IDEA製品を選んでください'),
+                    使用量: yup.number().positive('使用量は正の数にしてください').required()
+                }))
+            })
+        })
+
+        var grid;
+
+        onMounted(()=>{
+            const columns = ['構成コード','構成名','作成者名','在庫単位','単位重量','製法']
+
+            const {構成docs} = useTables()
+
+            grid = new Grid({
+                columns,
+                data:Object.values(構成docs),
+                className:{
+                    td:'max-w-52 truncate'
+                },
+            })
+
+            grid.on('rowClick',(...args)=>{
+                const {cells} = args[1]
+                const 構成コード = cells[columns.findIndex(c=>c==='構成コード'||c.id==='構成コード')].data
+                const item = 構成docs[構成コード]
+                if(!item)return
+
+                form.setValues(item)
+
+                changeSelectedRowColor()
+
+                useState().$patch({isEdit:true})
+            })
+
+            grid.render(document.getElementById('grid-elem'))
+        })
+
+        function changeSelectedRowColor(){
+          const rowElems = document.querySelectorAll('.gridjs-tr');
+
+          rowElems.forEach(row => {
+            const idElem = row.firstElementChild
+            const id = idElem.innerText
+            const isSelected = id == form.values['構成コード']
+
+            row.classList.toggle('bg-orange-100', isSelected)
+          });
+      }
+
+        const query = reactive({
+            word:'',
+            onlyMe:true,
+            onlyMyDiv:true
+        })
+
+        watch(query,()=>{
+            if(!grid)return
+            const {word, onlyMe, onlyMyDiv} = query
+            const {currentUser} = useUsers()            
+            let 構成items = Object.values(useTables().構成docs)
+            if(onlyMe){
+                構成items = 構成items.filter(構成item=>構成item['作成者メールアドレス']===currentUser['メールアドレス'])
+            }
+            if(onlyMyDiv){
+                構成items = 構成items.filter(構成item=>構成item['作成者所属名']===currentUser['所属名'])
+            }
+            if(word){
+                構成items = 構成items.filter(構成item=>構成item['構成名'].includes(word))
+            }
+
+            grid.updateConfig({
+                data:構成items
+            }).forceRender()
+        },{ immediate: true })
+
+
+        const save = form.handleSubmit( async values=>{
+            useState().$patch({isLoading:true})          
+
+            const {currentUser} = useUsers()
+            values['作成者メールアドレス'] = currentUser['メールアドレス']
+            values['作成者所属名'] = currentUser['所属名']
+
+            await useTables().sync構成docs(values)
+
+            grid.updateConfig({data:Object.values( useTables().構成docs )}).forceRender()
+
+            useState().$patch({isLoading:false})
+        })
+
+        return {form, save, query}
+    }
+})
+
+</script>
+
+<template>
+<div class="flex justify-between h-full w-screen">
+    <!-- 左側 -->
+    <div class="flex-1">
+        <div>
+            <div class="border grid grid-cols-6">
+
+                <label class="form-control w-full max-w-xs col-span-6">
+                    <div class=" label">
+                        <span class=" label-text">構成名</span>
+                    </div>
+                    <input class=" input input-sm input-bordered" v-model="query.word">
+                </label>
+
+                <label class=" label justify-start cursor-pointer col-span-3">
+                    <input type="checkbox" class=" checkbox checkbox-sm" v-model="query.onlyMe">                    
+                    <span class="label-text">自分が登録した構成のみ表示</span>
+                </label>
+
+                <label class=" label justify-start cursor-pointer col-span-3">
+                    <input type="checkbox" class=" checkbox checkbox-sm" v-model="query.onlyMyDiv">                    
+                    <span class="label-text">自部署が登録した構成のみ表示</span>
+                </label>
+
+            </div>
+        </div>
+
+        <div class="my-5 overflow-x-scroll border">
+            <div id="grid-elem" class=" border table"></div>
+        </div>
+    </div>
+
+    <!-- 右側 -->
+    <div class="bg-orange-100 h-full w-96 flex-none p-3">
+        <div v-if=" Object.keys(form.values).length<3 " class="">構成を選んでください</div>
+
+        <div v-else class="flex flex-col">
+            <Detail :form="form" @save="save" />
+        </div>
+    </div>
+
+</div>
+</template>

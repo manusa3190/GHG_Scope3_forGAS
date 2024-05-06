@@ -1,30 +1,66 @@
-<script>
+<script lang="ts">
+import { defineComponent,ref } from 'vue'
+import { useField } from 'vee-validate'
+import useMasters from '@/stores/useMasters';
+import useState from '@/stores/useState';
 
-defineComponent({
-  props:{name:String, items:Array},
-  setup(props){
-    const { handleChange, value, handleBlur, errorMessage, meta } = useField(() => '種別コード',undefined);
+export default defineComponent({
+  setup(){
+    const { handleChange, value} = useField(() => '種別コード',undefined);
 
     const {種別マスタitems, 種別マスタdocs} = useMasters()
 
-    return { value, handleChange, 種別マスタitems, useState, 種別マスタdocs}
+    const dialog = ref(null)
+
+    function select(i){
+      種別マスタitems[i] && handleChange(種別マスタitems[i]['種別コード'])
+      dialog.value.close()
+    }
+
+    return { value, handleChange, select, 種別マスタitems, useState, 種別マスタdocs, dialog}
   }
 })
 
 </script>
 
 <template>
-  <div class="dropdown">
-    <div :tabindex="useState().isEdit? 0:null" role="button" :class="useState().isEdit? 'link m-1':''">
+  <div>
+    <a class=" link " @click="dialog.showModal()">
       <span v-if="種別マスタdocs[value]">{{種別マスタdocs[value]['種別名']}}</span>
       <span v-else>選択されていません</span>
-    </div>
+    </a>
 
-    <ul tabindex="0"
-    class="menu menu-sm bg-white w-60 max-h-[40rem] overflow-auto dropdown-content z-[1] shadow rounded-box">
-        <li v-for=" 種別 of 種別マスタitems">
-          <a class=" truncate" @click="handleChange(種別['種別コード'])">{{種別['種別名']}}</a>
-        </li>
-    </ul>
+    <dialog class="modal" ref="dialog">
+      <div class="modal-box h-[600px] w-[900px]">
+          <h2>種別を選択</h2>
+
+          <ul class="menu cursor-pointer">
+            <details>
+              <summary class="p-3 text-lg">資材</summary>
+              <ul>
+                <li v-for=" (種別,i) of 種別マスタitems.slice(0,18)" :key="種別['種別コード']">
+                  <a class=" truncate" @click="select(i)">{{種別['種別名']}}</a>
+                </li>              
+              </ul>
+            </details>
+
+            <details>
+              <summary class="p-3 text-lg">原料</summary>
+              <ul>
+                <li v-for=" (種別,i) of 種別マスタitems.slice(19)" :key="種別['種別コード']">
+                  <a class=" truncate" @click="select(i+19)">{{種別['種別名']}}</a>
+                </li>
+              </ul>
+            </details>
+
+          </ul>
+
+          <div class=" modal-action">
+            <button class="btn" @click="dialog.close()">閉じる</button>
+          </div>
+      </div>
+    </dialog>    
   </div>
+
+
 </template>

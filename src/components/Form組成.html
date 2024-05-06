@@ -1,4 +1,8 @@
-<script>
+<script lang="ts">
+import { defineComponent, ref, computed } from 'vue'
+import { useField, useFieldArray } from 'vee-validate'
+import useMasters from '@/stores/useMasters';
+import useState from '@/stores/useState';
 
 export default defineComponent({
   setup(){

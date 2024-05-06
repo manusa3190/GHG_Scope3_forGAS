@@ -7,14 +7,13 @@ const lock = LockService.getScriptLock()
 function get自所属users(){  
   const 従業員マスタ = new Sheet({spreadsheetId:useRuntimeConfig('従業員マスタ'),key列名:'E-Mail'})
 
-  // const currentUserEmail = Session.getActiveUser().getEmail()
-  const currentUserEmail = 'yuta.ueda@kobayashi.co.jp'
+  const currentUserEmail = Session.getActiveUser().getEmail()
   const currentUser = 従業員マスタ.docs[currentUserEmail]
 
   if(!currentUser)throw('currentUser所属名が見つかりません')
 
   return 従業員マスタ.items
-      .filter(item=>item['AD_所属コード']===currentUser['AD_所属コード'])
+      .filter(item=>item['所属名']===currentUser['所属名'])
       .map(item=>({
         従業員番号:item['従業員番号'],
         従業員名:item['AD_氏名'],
@@ -24,55 +23,95 @@ function get自所属users(){
       }))
 }
 
-function get自所属原資材docs(所属名=''){
-  const 原資材調査spreadsheet = SpreadsheetApp.openById(useRuntimeConfig('原資材調査'))
-  const {items} = new Sheet({spreadsheet:原資材調査spreadsheet,sheetName:'原資材テーブル'})
-  const 情報テーブル = new Sheet({spreadsheet:原資材調査spreadsheet,sheetName:'情報テーブル'})
-  const {items:組成テーブルitems} = new Sheet({spreadsheet:原資材調査spreadsheet,sheetName:'組成テーブル'})
+function sync自所属原資材docs(data){
+  try{
+    lock.waitLock(10000)
+    const 原資材調査spreadsheet = SpreadsheetApp.openById(useRuntimeConfig('原資材調査'))
+    const 原資材テーブル = new Sheet({spreadsheet:原資材調査spreadsheet,sheetName:'原資材テーブル'})
+    const 構成テーブル = new Sheet({spreadsheet:原資材調査spreadsheet,sheetName:'構成テーブル'})
+    const 組成テーブル = new Sheet({spreadsheet:原資材調査spreadsheet,sheetName:'組成テーブル'})
 
-  var 自所属items = []
+    if(data){
+        data['更新日時'] = new Date()
 
-  if(所属名==='ﾍﾙｽｹｱ事業部 品質ﾏﾈｼﾞﾒﾝﾄ部 品質改革G' || 所属名==='日用品事業部 事業戦略推進部 品質推進G'){
-    自所属items = items.filter(item=>item['品目区分名']==='原料')
-  }else if(所属名.includes('開発･調達統括部')){
-    自所属items = items.filter(item=>item['担当部署名']===所属名)
-  }else{
-    自所属items = items
+        if(data['使いまわし']){
+          // 使いまわし品は原資材テーブルに構成コードを書くのみ
+          原資材テーブル.setItem(data)
+
+        }else{
+          // 使いまわしでないものは新規作成  
+          if(!data['構成コード']){
+            const 構成コード = 構成テーブル.getNewId()
+            data['構成コード'] = 構成コード
+            data['組成'].forEach(item=>item['構成コード']=構成コード)
+          }
+          data['構成名'] = data['品名']+'_構成'
+
+          原資材テーブル.setItem(data)
+          構成テーブル.setItem(data)
+          組成テーブル.setItems(data['組成'])            
+        }
+
+        原資材テーブル.fetch()
+        構成テーブル.fetch()
+        組成テーブル.fetch()
+    } // データ書き込み
+
+    var 自所属items = []
+    const {所属名} = get自所属users().find(user=>user.isCurrentUser)
+
+    // if(所属名==='ﾍﾙｽｹｱ事業部 品質ﾏﾈｼﾞﾒﾝﾄ部 品質改革G' || 所属名==='日用品事業部 事業戦略推進部 品質推進G'){
+    //   自所属items = 原資材テーブル.items.filter(item=>item['品目区分名']==='原料')
+    // }else if(所属名.includes('開発･調達統括部')){
+    //   自所属items = 原資材テーブルitems.filter(item=>item['担当所属名']===所属名)
+    // }else{
+    //   自所属items = items
+    // }
+
+    if(所属名==='サステナビリティ推進室'){
+      自所属items = 原資材テーブル.items
+    }else{
+      自所属items = 原資材テーブル.items.filter(item=>item['所属名']===所属名)
+    }
+
+    const empty構成item = {
+      構成名:null,
+      使いまわし:false,
+      作成者メールアドレス:null,
+      作成者所属名:null,
+      更新日時:null,
+      在庫単位あたり重量:0,
+      使用単位あたり重量:0,
+      種別コード:'',
+      容リ法分類:'対象外',
+      プラスチックフラグ:false,
+      製法コード:'',
+      組成:[]
+    }
+    自所属items.forEach(原資材item=>{ // 冗長な書き方であるが、スピードを優先している
+        const {構成コード} = 原資材item
+        if(構成コード){
+          Object.assign(原資材item,構成テーブル.docs[構成コード])
+          原資材item['組成'] = 組成テーブル.items.filter(item=>item['構成コード']===構成コード)
+        }else{
+          Object.assign(原資材item, empty構成item)
+        }
+    })
+
+    return 自所属items.reduce((docs,item)=>Object.assign(docs,{[item['品目コード']]:item}),{})
+  }catch(err){
+    throw(err)
+  }finally{
+    lock.releaseLock()
   }
-
-  const empty情報item = {
-    構成名:null,
-    使いまわし:false,
-    作成者メールアドレス:null,
-    作成者所属名:null,
-    更新日時:null,
-    在庫単位あたり重量:0,
-    使用単位あたり重量:0,
-    種別コード:'',
-    容リ法分類:'対象外',
-    プラスチックフラグ:false,
-    製法コード:'',
-    組成:[]
-  }
-  自所属items.forEach(原資材item=>{ // 冗長な書き方であるが、スピードを優先している
-      const {構成コード} = 原資材item
-      if(構成コード){
-        Object.assign(原資材item,情報テーブル.docs[構成コード])
-        原資材item['組成'] = 組成テーブルitems.filter(item=>item['構成コード']===構成コード)
-      }else{
-        Object.assign(原資材item, empty情報item)
-      }
-  })
-
-  return 自所属items.reduce((docs,item)=>Object.assign(docs,{[item['品目コード']]:item}),{})
 }
 
-function get使いまわし情報docs(){
+function sync構成docs(){
   const 原資材調査spreadsheet = SpreadsheetApp.openById(useRuntimeConfig('原資材調査'))
-  let {items} = new Sheet({spreadsheet:原資材調査spreadsheet,sheetName:'情報テーブル'})
+  let {items} = new Sheet({spreadsheet:原資材調査spreadsheet,sheetName:'構成テーブル'})
   let {items:組成items} = new Sheet({spreadsheet:原資材調査spreadsheet,sheetName:'組成テーブル'})
 
-  const 情報items = items
+  const 構成items = items
       .filter(item=>item['使いまわし'])
       .map(item=>{
         return {
@@ -80,10 +119,10 @@ function get使いまわし情報docs(){
           組成:組成items.filter(組成item=>組成item['構成コード']===item['構成コード'])
         }
       })
-  return 情報items.reduce((docs,item)=>Object.assign(docs,{[item['構成コード']]:item}),{})
+  return 構成items.reduce((docs,item)=>Object.assign(docs,{[item['構成コード']]:item}),{})
 }
 
-function getマスタitems(){
+function syncMasters(){
   const マスタ = SpreadsheetApp.openById(useRuntimeConfig('マスタ'))
   const 種別マスタ = new Sheet({spreadsheet:マスタ,sheetName:'種別マスタ'})
   const IDEAマスタv2 = new Sheet({spreadsheet:マスタ,sheetName:'IDEAマスタv2'})
@@ -119,62 +158,17 @@ function set担当者(data){ // data:{品目コード, 品名, 担当者メー�
   }
 }
 
-
-function set原資材(data){
-  try{
-    lock.waitLock(10000)
-    const 原資材調査spreadsheet = SpreadsheetApp.openById(useRuntimeConfig('原資材調査'))
-    const 原資材テーブル = new Sheet({spreadsheet:原資材調査spreadsheet,sheetName:'原資材テーブル'})
-    
-    const newItem = 原資材テーブル.docs[data['品目コード']]
-    newItem['更新日時'] = new Date()
-
-    if(data['使いまわし']){
-      // 使いまわし品は原資材テーブルに構成コードを書くのみ
-      newItem['構成コード'] = data['構成コード']
-      原資材テーブル.setItem(newItem)
-      return newItem
-    }
-
-    // 使いまわしでないものは新規作成
-    const 情報テーブル = new Sheet({spreadsheet:原資材調査spreadsheet,sheetName:'情報テーブル'})
-    const 組成テーブル = new Sheet({spreadsheet:原資材調査spreadsheet,sheetName:'組成テーブル'})    
-
-    Object.assign(newItem,data)
-
-    if(!newItem['構成コード']){
-      const 構成コード = 情報テーブル.getNewId()
-      newItem['構成コード'] = 構成コード
-      newItem['組成'].forEach(item=>item['構成コード']=構成コード)
-    }
-
-    newItem['構成名'] = newItem['品名']+'_構成'
-    newItem['作成者メールアドレス'] = data['作成者メールアドレス']
-    newItem['作成者名'] = data['作成者名']     
-
-    原資材テーブル.setItem(newItem)
-    情報テーブル.setItem(newItem)
-    組成テーブル.setItems(newItem['組成'])    
-
-    return newItem
-  }catch(err){
-    throw(err)
-  }finally{
-    lock.releaseLock()
-  }
-}
-
 // 構成を編集
-function set情報and構成(data){
+function set構成and構成(data){
   try{
     lock.waitLock(10000)
     const 原資材調査spreadsheet = SpreadsheetApp.openById(useRuntimeConfig('原資材調査'))
-    const 情報テーブル = new Sheet({spreadsheet:原資材調査spreadsheet,sheetName:'情報テーブル'})
+    const 構成テーブル = new Sheet({spreadsheet:原資材調査spreadsheet,sheetName:'構成テーブル'})
     const 組成テーブル = new Sheet({spreadsheet:原資材調査spreadsheet,sheetName:'組成テーブル'})
 
     data['更新日時'] = new Date()
 
-    情報テーブル.setItem(data)
+    構成テーブル.setItem(data)
     組成テーブル.setItems(data['組成'])
 
     data['更新日時'] = data['更新日時'].toUTCString()
@@ -189,14 +183,14 @@ function set情報and構成(data){
 
 
 // 構成を削除
-function delete情報and構成(data){
+function delete構成and構成(data){
   try{
     lock.waitLock(10000)
     const 原資材調査spreadsheet = SpreadsheetApp.openById(useRuntimeConfig('原資材調査'))
-    const 情報テーブル = new Sheet({spreadsheet:原資材調査spreadsheet,sheetName:'情報テーブル'})
+    const 構成テーブル = new Sheet({spreadsheet:原資材調査spreadsheet,sheetName:'構成テーブル'})
     const 組成テーブル = new Sheet({spreadsheet:原資材調査spreadsheet,sheetName:'組成テーブル'})
 
-    情報テーブル.remove(data)
+    構成テーブル.remove(data)
     data['組成'].forEach(組成item=>組成テーブル.remove(組成item['組成コード']))
 
     return data

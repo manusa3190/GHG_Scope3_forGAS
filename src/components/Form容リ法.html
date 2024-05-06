@@ -1,14 +1,18 @@
-<script>
+<script lang="ts">
+import { defineComponent, onMounted } from 'vue'
+import { useField } from 'vee-validate'
+import { Grid } from 'gridjs'
+import useMasters from '@/stores/useMasters'
+import useState from '@/stores/useState'
 
-defineComponent({
-  props:{},
-  setup(props){
+export default defineComponent({
+  setup(){
     const { handleChange, value, handleBlur, errorMessage, meta, setValue } = useField(() => '容リ法分類',undefined);
 
     const {容リ法マスタitems} = useMasters()
 
     onMounted(()=>{
-      const columns = ['分類','内容']
+      const columns = [{id:'分類',name:'分類', width:'100px'},'内容']
 
       const grid = new Grid({
         columns,
@@ -17,7 +21,7 @@ defineComponent({
 
       grid.on('rowClick',(...args)=>{
         const {cells} = args[1]
-        const 分類 = cells[columns.findIndex(c=>c==='分類')].data
+        const 分類 = cells[columns.findIndex(c=>c==='分類'|| c.id==='分類')].data
         setValue(分類)
       })
 
@@ -31,13 +35,12 @@ defineComponent({
 </script>
 
 <template>
-    <dl class="flex justify-between items-center max-w-60">
-      <dt>容リ法分類</dt>
-      <a class="link" onclick="容リ法modal.showModal()">{{ value }}</a>
+    <dl class="flex justify-between items-end max-w-60 h-8">
+      <dt class="">容リ法分類</dt>
+      <dd class="link" onclick="容リ法modal.showModal()">{{ value || '未選択' }}</dd>
     </dl>
-    
 
-    <dialog id="容リ法modal" class="modal">
+    <dialog id="容リ法modal" class="modal ">
       <div class="modal-box">
 
         <p class="py-4">該当する容リ法分類を選択してください</p>
@@ -46,8 +49,7 @@ defineComponent({
 
         <div class="modal-action">
           <form method="dialog">
-            <!-- if there is a button in form, it will close the modal -->
-            <button class="btn">Close</button>
+            <button class="btn">閉じる</button>
           </form>
         </div>
       </div>

@@ -1,28 +1,29 @@
-<script>
+<script lang="ts">
 
-defineComponent({
+export default defineComponent({
   props:{form:Object},
   setup(props){
+    const {form} = props
+
     const dialog = ref(null)
 
     const 構成名検索word = ref('')
 
     const 構成候補items = computed(()=>{
-        const {使いまわし情報docs} = useTables()
-        return Object.values(使いまわし情報docs).filter(item=>item['構成名'].includes(構成名検索word.value))
+        const {構成docs} = useTables()
+        return Object.values(構成docs).filter(item=>item['構成名'].includes(構成名検索word.value))
     })
 
-    function set構成to原資材(構成item){
-      for(const key in 構成item){
-        if(構成item[key]===""){
-          構成item[key]=null
-        }
-      }
-      props.form.setValues({...構成item})
-      dialog.value.close()
+    function select(i){ // 構成itemを直接渡そうとするとリアクティブにならないので、indexを渡して、構成itemを取得する
+        const {values, setValues} = form
+        const 構成item = 構成候補items.value[i]
+        console.log(構成item.構成コード)
+        const newItem = Object.assign({...values}, 構成item)
+        setValues(構成item)
+        dialog.value.close()
     }
 
-    return {dialog, set構成to原資材, 構成名検索word, 構成候補items, useState}
+    return {dialog, 構成名検索word, 構成候補items, select, useState}
   }
 })
 
@@ -42,10 +43,10 @@ defineComponent({
 
           <table class="table table-sm">
               <tbody>
-              <tr v-for="構成item of 構成候補items" :key="構成item['構成コード']">
-                  <td>{{構成item['構成名']}}</td>
+              <tr v-for="(構成item,i) of 構成候補items" :key="i">
+                  <td>{{ 構成item['構成名'] }}</td>
                   <td>
-                    <div @click="set構成to原資材(構成item)" class="btn btn-primary btn-xs">選択</div>
+                    <div @click="select(i)" class="btn btn-primary btn-xs">選択{{ 構成item['構成コード'] }}</div>
                   </td>
               </tr>
               </tbody>

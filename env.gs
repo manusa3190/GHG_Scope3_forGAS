@@ -1,8 +1,6 @@
-従業員マスタ_DEV = '1t8DevA7ibxPclRXQ4DgV6G6pIXtC5WLog1oTQoF0IDE'
-従業員マスタ_PROD = '1YIHL1349pfxAvmtA_Z3vY2Ifc36RHb_1zNz0-odqHLU'
+原資材調査_DEV  = '1-Qlv8edxiDmVgkosjA1it-RUB319Jj-6EbKppEwkme0' //鬼殺隊アカウント
 
-原資材調査_DEV  = '1phQaZJw7eGANAQNSCtS86aF6H1JJgf0f0fB4C7zeSuU'
-原資材調査_PROD = '1-WXUVG4iQmmsya5voSEMj_2XPvzmlc03X6X4h3aTKu4'
+マスタ_DEV = '14evY1ssHI8jkvIKmB42Gyn-lR3Uem_U82eyKZlorgLU' //鬼殺隊アカウント
 
-マスタ_DEV = '1UP1BU0-XPYZLDI8zSRMlKdx0GZ1YMnIDX1iD0Lu1Kic'
-マスタ_PROD = '1Hzh8BZfnxdvuf5Is8FpyI12126v_ZA3C8oEm1RZbrak'
+従業員マスタ_DEV = '1MVNqyL-f4HSD3u3tRB0OmD0Z4il_IK63r0DWp-N6_g4' //鬼殺隊アカウント
+

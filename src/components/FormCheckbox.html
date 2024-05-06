@@ -1,6 +1,9 @@
-<script>
+<script lang="ts">
+import { defineComponent } from 'vue'
+import { useField } from 'vee-validate'
+import useState from '@/stores/useState';
 
-defineComponent({
+export default defineComponent({
   props:{name:String},
   setup(props){
     const {name} = props
@@ -14,10 +17,10 @@ defineComponent({
 </script>
 
 <template>
-<div class="form-control max-w-[200px]">
-  <label class="label cursor-pointer ">
-    <span class="label-text">{{ name.replace('フラグ','') }}</span> 
-    <input type="checkbox" class=" checkbox checkbox-primary" :checked="value" @change="handleChange($event.target.checked)" :disabled="!useState().isEdit"/>
-  </label>
-</div>
+  <dl class="flex justify-between items-end max-w-60 ">
+      <dt class="">{{ name.replace('フラグ','') }}</dt>
+      <dd class="">
+        <input type="checkbox" class=" checkbox checkbox-primary" :checked="value" @change="handleChange($event.target.checked)" :disabled="!useState().isEdit"/>
+      </dd>
+  </dl>
 </template>

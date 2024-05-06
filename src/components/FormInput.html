@@ -1,6 +1,9 @@
 <script>
+import { defineComponent } from 'vue'
+import { useField } from 'vee-validate'
+import useState from '@/stores/useState'
 
-defineComponent({
+export default defineComponent({
   props:{name:String, type:String, suffix:String},
   setup(props){
     const {name, type, suffix} = props
@@ -23,7 +26,7 @@ defineComponent({
 
     <div class="input-sm w-36 flex" 
     :class="{'input input-bordered':useState().isEdit}">
-      <input :disabled="!useState().isEdit" class=" w-16 "
+      <input :disabled="!useState().isEdit" class=" w-16 text-right"
       :type="type || 'text'" :value="value" @change="handleChange" />
 
       <span v-if="suffix" class=" truncate">{{suffix}}</span>

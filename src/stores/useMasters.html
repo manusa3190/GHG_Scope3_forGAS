@@ -1,8 +1,8 @@
 <script>
 
-defineStore("master",()=>{
+export default defineStore('useMasters', ()=>{
   const 種別マスタitems = ref([])
-  const IDEAマスタv2items = ref([]) 
+  const IDEAマスタv2items = ref([])
   const 製法マスタitems = ref([])
   const 容リ法マスタitems = ref([
     {分類:'対象外',内容:'容器・包装ではないもの'},
@@ -16,22 +16,23 @@ defineStore("master",()=>{
     {分類:'PETボトル',内容:'食料品（しょうゆ、※乳飲料等、※その他調味料）、清涼飲料、酒類）を充てんするためのもの'},
   ])
 
-  const fetchマスタ =()=>new Promise((resolve)=>{
+  const syncMasters = async () => new Promise((resolve,reject) =>{
     google.script.run
       .withSuccessHandler(res=>{
-        種別マスタitems.value = res['種別マスタitems']
-        IDEAマスタv2items.value = res['IDEAマスタv2items']
-        製法マスタitems.value = res['製法マスタitems']
-        resolve()
+          種別マスタitems.value = res.種別マスタitems
+          IDEAマスタv2items.value = res.IDEAマスタv2items
+          製法マスタitems.value = res.製法マスタitems
+          resolve()
       })
-      .getマスタitems()
+      .withFailureHandler(err=>{
+        reject(`syncMastersでエラー。${err}\n`)
+      })
+      .syncMasters()
   })
 
-  const 種別マスタdocs = computed(()=>{
-    return 種別マスタitems.value.reduce((docs,item)=>Object.assign(docs,{[item['種別コード']]:item}),{});
-  })
+  const 種別マスタdocs = computed(()=>種別マスタitems.value.reduce((docs,item)=>Object.assign(docs,{[item['種別コード']]:item}),{})) ;
 
-  return {種別マスタitems, 種別マスタdocs, IDEAマスタv2items, 製法マスタitems, 容リ法マスタitems, fetchマスタ}
+  return {種別マスタitems, 種別マスタdocs, IDEAマスタv2items, 製法マスタitems, 容リ法マスタitems, syncMasters}
 })
 
 </script>

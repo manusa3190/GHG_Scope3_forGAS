@@ -1,50 +1,35 @@
 <script>
-const useTables = defineStore('useTables', () => {
+
+export default defineStore('useTables',()=>{
   const 自所属原資材docs = ref({})
-  const 使いまわし情報docs = ref({})
-  
-  const fetch自所属原資材docs=()=>new Promise((resolve)=>{
+  const 構成docs = ref({})
+
+  const sync自所属原資材docs = async(data)=> new Promise((resolve,reject) => {
     google.script.run
       .withSuccessHandler(res=>{
-        自所属原資材docs.value= structuredClone(res) //これをしとかないとuseFieldにセットした時に無限ループしてしまう
+        自所属原資材docs.value= structuredClone(res)
         resolve()
       })
       .withFailureHandler(err=>{
-        console.log(113)
+        reject(`sync自所属原資材docsでエラー。${err}\n`)
       })
-      .get自所属原資材docs()
-  })
-        
-  const fetch使いまわし情報docs=()=>new Promise((resolve)=>{
-    google.script.run
-      .withSuccessHandler(res=>{
-        使いまわし情報docs.value=structuredClone(res)
-        resolve()
-      })
-      .get使いまわし情報docs()
+      .sync自所属原資材docs(data)
+
   })
 
-
-  const set原資材doc=(data)=>{
+  const sync構成docs = async(data)=> new Promise((resolve,reject) => {
     google.script.run
       .withSuccessHandler(res=>{
-        自所属原資材docs.value[res['品目コード']]=res
+        構成docs.value=structuredClone(res)
         resolve()
       })
-      .set自所属原資材doc()
-  }
-
-  const set使いまわし情報doc=(data)=>{
-      google.script.run
-      .withSuccessHandler(res=>{
-        使いまわし情報docs.value[res['構成コード']]=res
-        resolve()
+      .withFailureHandler(err=>{
+        reject(`sync構成docsでエラー。${err}\n`)
       })
-      .set使いまわし情報doc()
-  }
+      .sync構成docs(data)
+  })
 
-  const 自所属原資材items = computed(()=>Object.values(自所属原資材docs.value))
-
-  return {自所属原資材docs, 自所属原資材items, 使いまわし情報docs, fetch自所属原資材docs, fetch使いまわし情報docs, set原資材doc, set使いまわし情報doc}
+  return {自所属原資材docs, 構成docs, sync自所属原資材docs, sync構成docs}
 })
+
 </script>

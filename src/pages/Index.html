@@ -1,0 +1,106 @@
+<script lang="ts">
+export default defineComponent({
+  components:{Detail},
+    setup(){
+
+      const form = useForm({
+        validationSchema: yup.object({
+          在庫単位あたり重量:yup.number().min(0,'在庫単位あたり重量は正の数にしてください'),
+          使用単位あたり重量:yup.number().min(0,'使用単位あたり重量は正の数にしてください'),
+          種別コード: yup.string(),
+          容リ法分類:yup.string(),
+          プラスチックフラグ:yup.boolean(),
+          製法コード:yup.string(),
+          組成: yup.array().min(1,'最低一つは選んでください').of(yup.object({
+            IDEA製品コード:yup.string().required('IDEA製品を選んでください'),
+            使用量: yup.number().positive('使用量は正の数にしてください').required()
+          }))
+        })
+      })
+
+      var grid
+
+      onMounted(()=>{
+
+        const columns = ['品目コード','品名','取引先名',
+          {id:'担当者名', name:'担当者名', formatter: (cell, row) => cell? html(`<div>${cell}</div>`):html(`<div>担当者なし</div>`)},
+          {id:'構成コード',hidden:true},
+          {id:'構成コード',name:'登録',formatter: (cell, row) => cell? html(`<div>済</div>`):html(`<div></div>`)}
+        ]
+
+        grid = new Grid({
+          columns,
+          data:Object.values( useTables().自所属原資材docs ),
+          className:{
+            td:'max-w-52 truncate'
+          },
+          height:'900px',
+          sort:true,
+        })
+
+        grid.on('rowClick',(...args)=>{
+          const {cells } = args[1]
+          const 品目コード = cells[columns.findIndex(c=>c==='品目コード'||c.id==='品目コード')].data
+          const item = useTables().自所属原資材docs[品目コード]
+          form.setValues(item)
+
+          changeSelectedRowColor()
+
+          useState().$patch({isEdit:!item['構成コード']})
+        })
+
+        grid.render(document.getElementById('index'))
+      })
+
+      function changeSelectedRowColor(){
+          const rowElems = document.querySelectorAll('.gridjs-tr');
+
+          rowElems.forEach(row => {
+            const idElem = row.firstElementChild
+            const id = idElem.innerText
+            const isSelected = id == form.values['品目コード']
+
+            row.classList.toggle('bg-orange-100', isSelected)
+          });
+      }
+
+      const save = form.handleSubmit( async values=>{
+          useState().$patch({isLoading:true})          
+
+          const {currentUser} = useUsers()
+          values['作成者メールアドレス'] = currentUser['メールアドレス']
+          values['作成者所属名'] = currentUser['所属名']
+
+          await useTables().sync自所属原資材docs(values)
+
+          grid.updateConfig({data:Object.values( useTables().自所属原資材docs )}).forceRender()
+
+          useState().$patch({isLoading:false})
+        })
+
+      return {form, save}
+  }
+})
+
+</script>
+
+<template>
+  <div class="flex justify-between h-full w-screen">
+    <!-- 左側 -->
+    <div>
+      <div class=" overflow-x-scroll p-2">
+        <table id="index" class=" border table table-sm w-[500px]" />
+      </div>
+    </div>
+
+    <!-- 右側ウィンドウ -->
+    <div class="bg-orange-100 h-full w-96 flex-none p-3">
+      <div v-if="Object.keys(form.values).lengh" class="">原資材を選んでください</div>
+
+      <div v-else class="flex flex-col">
+        <Detail :form="form" @save="save" />
+      </div>
+    </div>
+  </div>
+  
+</template>
