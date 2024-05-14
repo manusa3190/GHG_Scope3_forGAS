@@ -13,7 +13,7 @@ export default defineComponent({
 
       const edittingIdx = ref(-1)
 
-      const 構成temp = {構成コード:null ,IDEA製品コード:null,IDEA製品名:null,使用量:0,使用量単位:'g'}
+      const 構成temp = {構成コード:null ,IDEA製品コード:null,IDEA製品名:null,使用量:100,使用量単位:'%'}
 
       const 編集中構成 = ref({...構成temp})
 
@@ -23,11 +23,24 @@ export default defineComponent({
           編集中構成.value = {...構成temp} 
       }
 
-      const {種別マスタdocs, IDEAマスタv2items} = useMasters()
+      const {種別マスタdocs, IDEAマスタv2items} = useMasters()      
 
       const 検索word = ref('')
       const 推奨のみ = ref(true)
       const 候補のみ = ref(false)
+
+      const 小分類items = computed(()=>{
+        const items = IDEAマスタv2items
+              .filter(item=> selected小分類コード.value? item['小分類コード']==selected小分類コード.value:true)
+              .filter(item=> 候補のみ.value? 候補小分類コードリスト.includes(item['小分類コード']):true)
+              .filter(item=> 推奨のみ.value? item['推奨フラグ']:true)
+              .filter(item=> 検索word.value? item['IDEA製品名'].includes(検索word.value):true)
+
+        return items.reduce((items,item)=>Object.assign(items,{[item['小分類コード']]:item['小分類名']}),{})
+      })
+
+      const selected小分類コード = ref(0)
+
 
       const 候補IDEAマスタitems = computed(() => {
           if(!種別コード.value)return[]
@@ -36,6 +49,7 @@ export default defineComponent({
           // 候補小分類コードリスト = 候補小分類コードリスト.map(e=> /^\d+$/.test(e)? Number(e):e)
 
           return IDEAマスタv2items
+              .filter(item=> selected小分類コード.value? item['小分類コード']==selected小分類コード.value:true)
               .filter(item=> 候補のみ.value? 候補小分類コードリスト.includes(item['小分類コード']):true)
               .filter(item=> 推奨のみ.value? item['推奨フラグ']:true)
               .filter(item=> 検索word.value? item['IDEA製品名'].includes(検索word.value):true)
@@ -43,7 +57,7 @@ export default defineComponent({
       })
 
       return {remove, push, update, fields, 
-      edittingIdx, 構成temp, 編集中構成, 構成に反映, 検索word, 推奨のみ, 候補のみ, 候補IDEAマスタitems,
+      edittingIdx, 構成temp, 編集中構成, 構成に反映, 検索word, 推奨のみ, 候補のみ, 候補IDEAマスタitems,小分類items, selected小分類コード,
       useState}
   }
 })
@@ -73,12 +87,12 @@ export default defineComponent({
     </table>
     
     <dialog id="my_modal_1" class="modal">
-        <div class="modal-box">
+        <div class="modal-box max-w-none w-[800px]">
             <h3 class="font-bold text-lg mt-0">素材を選択</h3>
 
             <div class="">
                 <div class="flex space-x-3">
-                    <input v-model="検索word" class="input input-sm input-bordered">
+                    <input v-model="検索word" class="input input-sm input-bordered" placeholder="ポリ、アミノ等">
 
                     <label class="label w-fit space-x-1">
                         <input type="checkbox" v-model="推奨のみ" class=" checkbox checkbox-sm">
@@ -91,15 +105,28 @@ export default defineComponent({
                     </label>
                 </div>
 
-                <ul class=" border h-60 overflow-y-auto">
-                    <li v-for="(item,i) of 候補IDEAマスタitems"  :key="i"
-                    @click="編集中構成['IDEA製品コード']=item['IDEA製品コード'];編集中構成['IDEA製品名']=item['IDEA製品名']"
-                    class="flex w-full cursor-pointer" :class="{'bg-gray-300': 編集中構成.IDEA製品コード===item['IDEA製品コード']}"
-                    >
-                        <div class=" truncate">{{ item['IDEA製品名'] }}</div>
-                        <div class="flex-1"></div>
-                    </li>
-                </ul>
+                <div class="flex space-x-3">
+                    <ul class=" border h-[480px] w-sm overflow-y-auto">
+                        <li v-for="(小分類名,小分類コード) in 小分類items"  :key="小分類コード"
+                        @click="selected小分類コード=小分類コード"
+                        class="flex w-full cursor-pointer" :class="{'bg-gray-300': selected小分類コード==小分類コード}"
+                        >
+                            <div class=" truncate">{{ 小分類名 }}</div>
+                        </li>
+                    </ul>
+
+                    <ul class=" border flex-1 overflow-y-auto">
+                        <li v-for="(item,i) of 候補IDEAマスタitems"  :key="i"
+                        @click="編集中構成['IDEA製品コード']=item['IDEA製品コード'];編集中構成['IDEA製品名']=item['IDEA製品名']"
+                        class="flex w-full cursor-pointer" :class="{'bg-gray-300': 編集中構成.IDEA製品コード===item['IDEA製品コード']}"
+                        >
+                            <div class=" truncate">{{ item['IDEA製品名'] }}</div>
+                            <div class="flex-1"></div>
+                        </li>
+                    </ul>                  
+                </div>
+
+
             </div>
 
             <div>

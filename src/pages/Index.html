@@ -5,10 +5,22 @@ export default defineComponent({
 
       const form = useForm({
         validationSchema: yup.object({
-          在庫単位あたり重量:yup.number().min(0,'在庫単位あたり重量は正の数にしてください'),
-          使用単位あたり重量:yup.number().min(0,'使用単位あたり重量は正の数にしてください'),
-          種別コード: yup.string(),
-          容リ法分類:yup.string(),
+          在庫単位あたり重量:yup.number().when("必要_在庫単位あたり重量", {
+            is: true,
+            then:()=>yup.number().positive('0より大きい数値にしてください')
+            // then:(shema)=> shema.number().positive('0より大きい数値にしてください') // この書き方はTypescript
+          }),
+          使用単位あたり重量:yup.number().when("必要_在庫単位あたり重量", {
+            is: true,
+            then:()=>yup.number().positive('0より大きい数値にしてください')
+          }),
+          // 種別コード: yup.string(),
+          容リ法分類:yup.string().required('選択してください'),
+          容リ法商品業種:yup.string().required('必須です').when('容リ法分類',{
+            is:'対象外',
+            then:()=>yup.string().oneOf(['対象外'],'容リ法分類が対象外なら、商品業種も対象外にしてください'),
+            otherwise:()=>yup.string().oneOf(['食料品','清涼飲料等','酒類','油脂加工等','医薬品','化粧品等','小売業','その他'],'当該資材を使用している製品の業種を選んでください')
+          }),
           プラスチックフラグ:yup.boolean(),
           製法コード:yup.string(),
           組成: yup.array().min(1,'最低一つは選んでください').of(yup.object({
@@ -33,7 +45,7 @@ export default defineComponent({
 
         grid = new Grid({
           columns,
-          data:Object.values( useTables().自所属原資材docs ),
+          data:filtered自所属原資材items.value ,
           className:{
             th:'!p-1 text-center',
             td:'max-w-52 truncate !bg-inherit !py-0.5 text-center'
@@ -71,40 +83,47 @@ export default defineComponent({
       }
 
       const save = form.handleSubmit( async values=>{
-          useState().$patch({isLoading:true})          
+          useState().$patch({isLoading:true})
 
           const {currentUser} = useUsers()
           values['作成者メールアドレス'] = currentUser['メールアドレス']
           values['作成者所属名'] = currentUser['所属名']
+          console.log('サーバーに送るデータ:',values)
 
           await useTables().sync自所属原資材docs(values)
 
-          grid.updateConfig({data:Object.values( useTables().自所属原資材docs )}).forceRender()
+          grid.updateConfig({data:filtered自所属原資材items.value})
+          grid.forceRender()
 
           useState().$patch({isLoading:false})
         })
 
       const query = reactive({
         onlyMyItems:true,
-        onlyIncomplete:true
+        onlyIncomplete:false
       })
 
-      watch(query,()=>{
+      const filtered自所属原資材items = computed(()=>{
+          let items = Object.values(useTables().自所属原資材docs)
+
+          if(query.onlyMyItems){
+            items = items.filter(item=>item['担当者メールアドレス']===currentUserEmail.innerText)
+          }
+          if(query.onlyIncomplete){
+            items = items.filter(item=>!item['構成コード'])
+          }
+
+          return items
+      })
+
+      watch(filtered自所属原資材items,()=>{
         if(!grid)return
 
-        let items = Object.values( useTables().自所属原資材docs)
-        if(query.onlyMyItems){
-          items = items.filter(item=>item['担当者メールアドレス']===currentUserEmail.innerText)
-        }
-        if(query.onlyIncomplete){
-          items = items.filter(item=>!item['構成コード'])
-        }
-
-        grid.updateConfig({data:items})
+        grid.updateConfig({data:filtered自所属原資材items.value})
         grid.forceRender()
       })
 
-      return {form, save query}
+      return {form, save, query}
   }
 })
 
@@ -131,7 +150,7 @@ export default defineComponent({
 
     <!-- 右側ウィンドウ -->
     <div class="bg-orange-100 h-full w-96 flex-none p-3">
-      <div v-if="Object.keys(form.values).lengh" class="">原資材を選んでください</div>
+      <div v-if="!Object.keys(form.values).length" class="">原資材を選んでください</div>
 
       <div v-else class="flex flex-col">
         <Detail :form="form" @save="save" />

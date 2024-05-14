@@ -16,6 +16,8 @@ test1.setTest('get自所属users',()=>{
 
 test1.setTest('sync自所属原資材docs',()=>{
   const res = sync自所属原資材docs()
+  console.log(res)
+
   const [sampleKey, sampleItem] = Object.entries(res).shift()
   console.log(sampleKey)
   console.log(sampleItem)
@@ -59,9 +61,18 @@ webPageTest.setTest('Detail',()=>{
   return {expect:true, result:true}
 })
 
+const systemTest = new Test('systemTest')
+
+systemTest.setTest('LogTest',()=>{
+  Logger.log([{id:1,name:33}])
+  
+  return {expect:true, result:true}
+})
+
 function exec(){
+  // systemTest.run({})
   // webPageTest.run({only:['doGet']})
-  test1.run({only:['get自所属users','sync自所属原資材docs','syncMasters']})
+  // test1.run({only:['sync自所属原資材docs','syncMasters']})
 
 
 }

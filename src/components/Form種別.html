@@ -5,7 +5,8 @@ import useMasters from '@/stores/useMasters';
 import useState from '@/stores/useState';
 
 export default defineComponent({
-  setup(){
+  props:{setValues:Function},
+  setup(props){
     const { handleChange, value} = useField(() => '種別コード',undefined);
 
     const {種別マスタitems, 種別マスタdocs} = useMasters()
@@ -13,7 +14,19 @@ export default defineComponent({
     const dialog = ref(null)
 
     function select(i){
-      種別マスタitems[i] && handleChange(種別マスタitems[i]['種別コード'])
+      const 種別マスタitem = 種別マスタitems[i]
+      handleChange(種別マスタitem['種別コード'])
+
+      props.setValues({
+        容リ法分類:種別マスタitem['初期値_容リ法分類'],
+        容リ法商品業種:種別マスタitem['初期値_容リ法商品業種'],
+        プラスチックフラグ:種別マスタitem['初期値_プラスチックフラグ'],
+        製法コード:種別マスタitem['初期値_製法コード'],
+
+        必要_在庫単位あたり重量:種別マスタitem['必要_在庫単位あたり重量'],
+        必要_使用単位あたり重量:種別マスタitem['必要_使用単位あたり重量'],
+      })
+
       dialog.value.close()
     }
 
@@ -25,9 +38,8 @@ export default defineComponent({
 
 <template>
   <div>
-    <a class=" link " @click="dialog.showModal()">
-      <span v-if="種別マスタdocs[value]">{{種別マスタdocs[value]['種別名']}}</span>
-      <span v-else>選択されていません</span>
+    <a  @click="useState().isEdit? dialog.showModal():''" :class="{'!no-underline !text-gray-500':!useState().isEdit}">
+      {{ 種別マスタdocs[value]? 種別マスタdocs[value]['種別名']:'選択されていません' }}
     </a>
 
     <dialog class="modal" ref="dialog">

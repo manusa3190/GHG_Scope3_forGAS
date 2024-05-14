@@ -1,6 +1,6 @@
 const doGet=()=>{
   const html = HtmlService.createTemplateFromFile('src/main')
-  html.currentUserEmail = 't.kamado@kisatsu.com' // Session.getActiveUser().getEmail()
+  html.currentUserEmail = ENV==='PROD'?  Session.getActiveUser().getEmail():'t.kamado@kisatsu.com'
   return html.evaluate()
 }
 

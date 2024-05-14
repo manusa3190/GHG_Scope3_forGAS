@@ -1,6 +1,6 @@
 ENV = PropertiesService.getScriptProperties().getProperty('ENV')
 
-const useRuntimeConfig = (key) => globalThis[key+'_'+ENV]
+const useRuntimeConfig = (key) => globalThis[key]
 
 const lock = LockService.getScriptLock()
 
@@ -33,6 +33,7 @@ function sync自所属原資材docs(data){
 
     if(data){
         data['更新日時'] = new Date()
+        Logger.log(data)
 
         if(data['使いまわし']){
           // 使いまわし品は原資材テーブルに構成コードを書くのみ
@@ -59,20 +60,21 @@ function sync自所属原資材docs(data){
 
     var 自所属items = []
     const {所属名} = get自所属users().find(user=>user.isCurrentUser)
+    console.log(所属名)
 
-    // if(所属名==='ﾍﾙｽｹｱ事業部 品質ﾏﾈｼﾞﾒﾝﾄ部 品質改革G' || 所属名==='日用品事業部 事業戦略推進部 品質推進G'){
-    //   自所属items = 原資材テーブル.items.filter(item=>item['品目区分名']==='原料')
-    // }else if(所属名.includes('開発･調達統括部')){
-    //   自所属items = 原資材テーブルitems.filter(item=>item['担当所属名']===所属名)
-    // }else{
-    //   自所属items = items
-    // }
-
-    if(所属名==='サステナビリティ推進室'){
-      自所属items = 原資材テーブル.items
+    if(所属名==='ﾍﾙｽｹｱ事業部 品質ﾏﾈｼﾞﾒﾝﾄ部 品質改革G' || 所属名==='日用品事業部 事業戦略推進部 品質推進G'){
+      自所属items = 原資材テーブル.items.filter(item=>item['品目区分名']==='原料')
+    }else if(所属名.includes('開発･調達統括部')){
+      自所属items = 原資材テーブル.items.filter(item=>item['担当部署名']===所属名)
     }else{
-      自所属items = 原資材テーブル.items.filter(item=>item['所属名']===所属名)
+      自所属items = items
     }
+
+    // if(所属名==='サステナビリティ推進室'){
+    //   自所属items = 原資材テーブル.items
+    // }else{
+    //   自所属items = 原資材テーブル.items.filter(item=>item['所属名']===所属名)
+    // }
 
     const empty構成item = {
       構成名:null,
@@ -82,10 +84,11 @@ function sync自所属原資材docs(data){
       更新日時:null,
       在庫単位あたり重量:0,
       使用単位あたり重量:0,
-      種別コード:'',
-      容リ法分類:'対象外',
+      種別コード:null,
+      容リ法分類:null,
+      容リ法商品業種:null,
       プラスチックフラグ:false,
-      製法コード:'',
+      製法コード:'noseting',
       組成:[]
     }
     自所属items.forEach(原資材item=>{ // 冗長な書き方であるが、スピードを優先している
@@ -100,6 +103,7 @@ function sync自所属原資材docs(data){
 
     return 自所属items.reduce((docs,item)=>Object.assign(docs,{[item['品目コード']]:item}),{})
   }catch(err){
+    Logger.log(err)
     throw(err)
   }finally{
     lock.releaseLock()

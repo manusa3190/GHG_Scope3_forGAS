@@ -1,0 +1,31 @@
+<script lang="ts">
+import { defineComponent } from 'vue'
+import { useField } from 'vee-validate'
+import useState from '@/stores/useState';
+import useMasters from '@/stores/useMasters';
+
+export default defineComponent({
+  setup(props){
+    const { handleChange, value, handleBlur, errorMessage, meta } = useField(() => '製法コード',undefined);
+
+    const {製法マスタitems} = useMasters()
+
+    return {handleChange, value, handleBlur, errorMessage, meta, 製法マスタitems, useState}
+  }
+})
+
+</script>
+
+<template>
+    <select class="select disabled:bg-inherit disabled:text-black appearance-none"
+    :value="value" @change="handleChange"
+    :disabled="!useState().isEdit">
+        <option
+            v-for="(item, i) of 製法マスタitems"
+            :key="i"
+            :value="item['製法名']"
+        >
+            {{ item['製法名'] }}
+        </option>
+    </select>
+</template>

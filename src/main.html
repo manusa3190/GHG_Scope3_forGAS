@@ -10,7 +10,7 @@
     <style type="text/tailwindcss">
       svg {@apply p-1 w-10 mx-2 hover:cursor-pointer hover:bg-gray-200 active:bg-gray-300 self-center rounded-full};
 
-      .gridjs-tr {@apply hover:bg-gray-200 active:bg-gray-100  cursor-pointer}
+      tr.gridjs-tr {@apply hover:bg-gray-200 active:bg-gray-100  cursor-pointer}
     </style>
 
     <!--handsontable-->
@@ -61,10 +61,11 @@
 
           <?!= require('components/FormCheckbox') ?>
           <?!= require('components/FormInput') ?>
-          <?!= require('components/FormSelect') ?>
+          <?!= require('components/Form製法') ?>
           <?!= require('components/Form組成') ?>
           <?!= require('components/Form種別') ?>
           <?!= require('components/Form容リ法') ?>
+          <?!= require('components/Form容リ法商品業種') ?>
           
           <?!= require('components/RecordComposition') ?>
           <?!= require('components/SelectComposition') ?>

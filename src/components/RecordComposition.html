@@ -8,6 +8,8 @@ export default defineComponent({
 
     const 構成名 = ref('')
 
+    const 種別マスタdocs = useMasters()
+
     const dialog = ref(null)
 
     function record(){
@@ -34,27 +36,44 @@ export default defineComponent({
       
     }
 
-    return {構成名, values, dialog, record}
+    return {構成名, 種別マスタdocs, values, dialog, record }
   }
 })
 
 </script>
 
 <template>
-    <button class=" link" @click="dialog.showModal()">この構成を登録</button>
+    
+    <div v-if="values['使いまわし']"> {{ values['構成名'] }}で構成登録されています</div>
+    <button v-else class=" link" @click="dialog.showModal()">この構成を登録</button>
 
     <dialog class="modal" ref="dialog">
     <div class="modal-box">
         <h3 class="font-bold text-lg">この構成を登録します</h3>
- 
-        <p class="py-4">わかりやすい名前をつけてください</p>
 
-        <input class="input input-sm input-bordered " v-model="構成名">
+        <label>
+          <span>わかりやすい名前をつけてください</span>
+          <input class="input input-sm input-bordered w-96" v-model="構成名" placeholder="ブルーレット詰め替え台紙_精英堂">          
+        </label>
 
         <div class=" border m-2 p-2 flex flex-col space-y-3">
             <div class=" card-title">構成情報</div>
 
-            <pre>{{values}}</pre>
+            <p>種別:{{ 種別マスタdocs[values['種別コード']]}}</p>
+            <p>容リ法分類:{{values['容リ法分類']}}</p>
+            <p>プラスチックフラグ:{{values['プラスチックフラグ']}}</p>
+
+            <table class="table table-sm">
+              <thead><tr>
+                <td>IDEA製品コード</td><td>IDEA製品名</td><td>使用量</td>
+              </tr></thead>
+
+              <tbody>
+                <tr v-for="item of values['組成']">
+                  <td>{{item['IDEA製品コード']}}</td><td>{{item['IDEA製品名']}}</td><td>{{item['使用量']+ item['使用量単位']}}</td>
+                </tr>
+              </tbody>
+            </table>
 
         </div>
 

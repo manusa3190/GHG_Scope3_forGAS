@@ -16,6 +16,18 @@ export default defineStore('useMasters', ()=>{
     {分類:'PETボトル',内容:'食料品（しょうゆ、※乳飲料等、※その他調味料）、清涼飲料、酒類）を充てんするためのもの'},
   ])
 
+  const 容リ法商品業種items = ref([
+    {分類:'対象外',内容:'容器・包装ではないもの'},
+    {分類:'食料品',内容:'サプリメント、健康補助食品'},
+    {分類:'清涼飲料等',内容:'小林では杜仲茶のみ'},
+    {分類:'酒類',内容:'容器・小林では基本選択しない'},
+    {分類:'油脂加工等',内容:'石鹸等（液ブルなど界面活性剤使用製品はその他）'},
+    {分類:'医薬品',内容:'医薬品が該当'},
+    {分類:'化粧品等',内容:'医薬部外品も該当'},
+    {分類:'小売業',内容:'小林では基本選択しない'},
+    {分類:'その他',内容:'液ブルや上記に該当しない製品'},
+  ])
+
   const syncMasters = async () => new Promise((resolve,reject) =>{
     google.script.run
       .withSuccessHandler(res=>{
@@ -32,7 +44,7 @@ export default defineStore('useMasters', ()=>{
 
   const 種別マスタdocs = computed(()=>種別マスタitems.value.reduce((docs,item)=>Object.assign(docs,{[item['種別コード']]:item}),{})) ;
 
-  return {種別マスタitems, 種別マスタdocs, IDEAマスタv2items, 製法マスタitems, 容リ法マスタitems, syncMasters}
+  return {種別マスタitems, 種別マスタdocs, IDEAマスタv2items, 製法マスタitems, 容リ法マスタitems,容リ法商品業種items, syncMasters}
 })
 
 </script>
