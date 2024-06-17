@@ -1,38 +1,64 @@
 <script>
-const useUsers = defineStore('useUsers', () => {
 
-  const 自所属users = ref([])
-  const currentUser = computed(()=>自所属users.value.find(user=>user.isCurrentUser))
+import { ref, computed } from 'vue'
+import { defineStore } from 'pinia';
 
-  const get自所属users= async()=> new Promise(async(resolve)=>{
-
-    if(!localStorage.length){
-      await fetch自所属users()
+const sampleUsers = [
+    {
+        従業員番号:100,
+        従業員名:'植田雄太',
+        所属名:'仙台小林',
+        メールアドレス:'yuta.ueda@kobayashi.co.jp',
+        直属上司従業員番号:101,
+        直属上司氏名:'google植田',
+        拠点名:'仙台小林',
+        isCurrentUser:true
+    },{
+        従業員番号:101,
+        従業員名:'google植田',
+        所属名:'仙台小林',
+        メールアドレス:'yuta.ueda.fromosaka@gmail.com',
+        直属上司従業員番号:102,
+        直属上司氏名:'yahoo植田',
+        拠点名:'仙台小林',
+        isCurrentUser:false
     }
+]
 
-    if(localStorage.length){
-      自所属users.value = [...Array(localStorage.length)].map((_,i)=>{
-          const key = localStorage.key(i)
-          const item = JSON.parse(localStorage.getItem(key))
-          return item
-      })
-      resolve()
-    }else{
+export default defineStore('users',()=> {
 
-    }
-  })
+    const users = ref([]) //  従業員番号 従業員名 所属名 メールアドレス 直属上司従業員番号 直属上司氏名 isCurrentUser
 
-  const fetch自所属users=()=> new Promise((resolve)=>{
-    google.script.run
-      .withSuccessHandler(res=>{
-        res.forEach(user=>{
-          localStorage.setItem(user['メールアドレス'],JSON.stringify(user))
+    async function syncUsers(){
+        return new Promise((resolve,reject)=>{
+
+            try{
+                google.script.run
+                    .withSuccessHandler(res=>{
+                        users.value = JSON.parse(res)
+                        resolve()
+                    })
+                    .withFailureHandler(err=>{
+                        console.error(err)
+                        reject()
+                    })
+                    .syncUsers()              
+              }catch(e){
+                console.log('googleがありません')
+                setTimeout(()=>{
+                    users.value = sampleUsers
+                    resolve()
+                },1000)           
+              }
+
         })
-        resolve()
-      })
-      .get自所属users()    
-  })
+    }
 
-  return {自所属users, currentUser, get自所属users, fetch自所属users}
+    const currentUser=computed(()=>users.value.find(user=>user.isCurrentUser))
+
+    const userDocs = computed(()=>users.value.reduce((docs,user)=>Object.assign(docs,{[user['メールアドレス']]:user}),{}))
+
+    return {users, userDocs, syncUsers, currentUser}
 })
+
 </script>

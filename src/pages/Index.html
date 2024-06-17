@@ -1,34 +1,60 @@
 <script lang="ts">
+import { defineComponent, reactive, onMounted, watchEffect } from 'vue'
+import {Grid, html} from 'gridjs'
+
+import {useForm} from 'vee-validate'
+import * as yup from 'yup'
+
+import Detail from '@/components/Detail.vue'
+
+import use原資材 from '@/stores/use原資材'
+import use仕様 from '@/stores/use仕様'
+import useState from '@/stores/useState'
+import useUsers from '@/stores/useUsers'
+
+
 export default defineComponent({
   components:{Detail},
     setup(){
 
       const form = useForm({
-        validationSchema: yup.object({
-          在庫単位あたり重量:yup.number().when("必要_在庫単位あたり重量", {
-            is: true,
-            then:()=>yup.number().positive('0より大きい数値にしてください')
-            // then:(shema)=> shema.number().positive('0より大きい数値にしてください') // この書き方はTypescript
-          }),
-          使用単位あたり重量:yup.number().when("必要_在庫単位あたり重量", {
-            is: true,
-            then:()=>yup.number().positive('0より大きい数値にしてください')
-          }),
-          // 種別コード: yup.string(),
-          容リ法分類:yup.string().required('選択してください'),
-          容リ法商品業種:yup.string().required('必須です').when('容リ法分類',{
-            is:'対象外',
-            then:()=>yup.string().oneOf(['対象外'],'容リ法分類が対象外なら、商品業種も対象外にしてください'),
-            otherwise:()=>yup.string().oneOf(['食料品','清涼飲料等','酒類','油脂加工等','医薬品','化粧品等','小売業','その他'],'当該資材を使用している製品の業種を選んでください')
-          }),
-          プラスチックフラグ:yup.boolean(),
-          製法コード:yup.string(),
-          組成: yup.array().min(1,'最低一つは選んでください').of(yup.object({
-            IDEA製品コード:yup.string().required('IDEA製品を選んでください'),
-            使用量: yup.number().positive('使用量は正の数にしてください').required()
-          }))
-        })
+        validationSchema: use仕様().validationSchema
       })
+
+      async function setValuesToForm(原資材item){
+
+        if(原資材item['仕様コード']){
+          const 仕様item = use仕様().docs[原資材item['仕様コード']]
+          form.setValues(Object.assign(原資材item,仕様item))
+        }else{
+          const {currentUser} = useUsers()
+
+          const emptyValues = {
+            仕様コード:null,
+            仕様名:原資材item['品名']+'_仕様',
+            使いまわし:false,            
+            種別コード:null,
+
+            容リ法分類:'対象外',
+            容リ法商品業種:'対象外',
+            プラスチックフラグ:false,
+
+            在庫単位あたり重量:'0.00',
+            使用単位あたり重量:'0.00',
+            比重:'0.00',
+
+            組成:[],
+
+            作成者メールアドレス:currentUser['メールアドレス'],
+            作成者所属名:currentUser['所属名'], 
+            更新日時:null,
+          }
+
+          form.setValues(Object.assign(原資材item,emptyValues))
+        }
+
+        await form.validate()
+      }
 
       var grid
 
@@ -39,35 +65,39 @@ export default defineComponent({
           {id:'品名', name:'品名', width:'250px'},
           {id:'取引先名', name:'取引先名', width:'150px'},
           {id:'担当者名', name:'担当者名', formatter: (cell, row) => cell? html(`<div>${cell}</div>`):html(`<div>担当者なし</div>`)},
-          {id:'構成コード',hidden:true},
-          {id:'構成コード',name:'登録',formatter: (cell, row) => cell? html(`<div>済</div>`):html(`<div></div>`)}
+          {id:'仕様コード',hidden:true},
+          {id:'仕様コード',name:'登録',formatter: (cell, row) => cell? html(`<div>済</div>`):html(`<div></div>`)}
         ]
 
         grid = new Grid({
           columns,
-          data:filtered自所属原資材items.value ,
+          data:[] ,
           className:{
+            table:'border my-3',
             th:'!p-1 text-center',
-            td:'max-w-52 truncate !bg-inherit !py-0.5 text-center'
+            td:'max-w-52 truncate !bg-inherit !py-0.5 text-center',
           },
-          height:'800px',
           sort:true,
           fixedHeader:true,
+          search:true,
           pagenation:{limit:30}
         })
 
-        grid.on('rowClick',(...args)=>{
+        grid.on('rowClick',async(...args)=>{
           const {cells } = args[1]
           const 品目コード = cells[columns.findIndex(c=>c==='品目コード'||c.id==='品目コード')].data
-          const item = useTables().自所属原資材docs[品目コード]
-          form.setValues(item)
+          const item = use原資材().docs[品目コード]
+
+          await setValuesToForm(item)
 
           changeSelectedRowColor()
 
-          useState().$patch({isEdit:!item['構成コード']})
+          useState().$patch({isEdit:!item['仕様コード']})
         })
 
         grid.render(document.getElementById('index'))
+
+        updateGrid()
       })
 
       function changeSelectedRowColor(){
@@ -85,15 +115,18 @@ export default defineComponent({
       const save = form.handleSubmit( async values=>{
           useState().$patch({isLoading:true})
 
-          const {currentUser} = useUsers()
-          values['作成者メールアドレス'] = currentUser['メールアドレス']
-          values['作成者所属名'] = currentUser['所属名']
-          console.log('サーバーに送るデータ:',values)
+          if(values['使いまわし']){
+            // 原資材テーブルに仕様コードを書くのみ
+            await use原資材().syncItems(values)
+          }else{
+            // 新たに仕様を登録した後で原資材テーブルに仕様コードを登録
+            await use仕様().syncItems(values)
+            const 仕様item = use仕様().items.find(item=>item['仕様名']=== values['仕様名'])
+            values['仕様コード'] = 仕様item['仕様コード']
+            await use原資材().syncItems(values)
+          }
 
-          await useTables().sync自所属原資材docs(values)
-
-          grid.updateConfig({data:filtered自所属原資材items.value})
-          grid.forceRender()
+          updateGrid()
 
           useState().$patch({isLoading:false})
         })
@@ -103,25 +136,23 @@ export default defineComponent({
         onlyIncomplete:false
       })
 
-      const filtered自所属原資材items = computed(()=>{
-          let items = Object.values(useTables().自所属原資材docs)
+      const updateGrid = () =>{
+          let items = use原資材().items
 
           if(query.onlyMyItems){
-            items = items.filter(item=>item['担当者メールアドレス']===currentUserEmail.innerText)
+            items = items.filter(item=>item['担当者メールアドレス']===useUsers().currentUser['メールアドレス'])
           }
           if(query.onlyIncomplete){
-            items = items.filter(item=>!item['構成コード'])
+            items = items.filter(item=>!item['仕様コード'])
           }
 
-          return items
-      })
+          if(grid){
+              grid.updateConfig({data:items})
+              grid.forceRender()
+          }        
+      }
 
-      watch(filtered自所属原資材items,()=>{
-        if(!grid)return
-
-        grid.updateConfig({data:filtered自所属原資材items.value})
-        grid.forceRender()
-      })
+      watchEffect(()=>updateGrid())
 
       return {form, save, query}
   }
@@ -132,8 +163,8 @@ export default defineComponent({
 <template>
   <div class="flex justify-between h-full w-screen">
     <!-- 左側 -->
-    <div>
-      <div class="flex gap-4">
+    <div class="p-3">
+      <div class="flex gap-4 p-3">
         <label class=" label max-w-44 cursor-pointer">
           <input type="checkbox" class="checkbox checkbox-xs" v-model="query.onlyMyItems" />
           <span class="label-text">自分の担当品目のみ</span> 
@@ -145,7 +176,8 @@ export default defineComponent({
         </label>
       </div>
 
-      <table id="index" class=" border table table-sm w-[500px]" />
+      <table id="index" class=" table" />
+
     </div>
 
     <!-- 右側ウィンドウ -->
@@ -153,9 +185,15 @@ export default defineComponent({
       <div v-if="!Object.keys(form.values).length" class="">原資材を選んでください</div>
 
       <div v-else class="flex flex-col">
-        <Detail :form="form" @save="save" />
+        <Detail :form="form" @save="save"/>
       </div>
     </div>
   </div>
   
 </template>
+
+<style>
+.gridjs-tr{
+  @apply hover:bg-gray-200 active:bg-gray-100  cursor-pointer
+}
+</style>

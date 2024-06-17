@@ -11,6 +11,8 @@
       svg {@apply p-1 w-10 mx-2 hover:cursor-pointer hover:bg-gray-200 active:bg-gray-300 self-center rounded-full};
 
       tr.gridjs-tr {@apply hover:bg-gray-200 active:bg-gray-100  cursor-pointer}
+
+
     </style>
 
     <!--handsontable-->
@@ -40,7 +42,7 @@
     <script src="https://unpkg.com/vee-validate" defer></script>
 
     <script>
-      const { ref,reactive, computed, onMounted, watch, defineComponent} = Vue
+      const { ref,reactive, computed, onMounted, watch, watchEffect, defineComponent} = Vue
       const { useRoute, useRouter} = VueRouter
       const { createRouter, createWebHashHistory} = VueRouter
       const { defineStore, createPinia } = Pinia;
@@ -54,25 +56,26 @@
 
           const { useForm, useField, useFieldArray } = VeeValidate;
 
+          <?!= require('stores/useMasters') ?>
           <?!= require('stores/useState') ?>
           <?!= require('stores/useUsers') ?>
-          <?!= require('stores/useTables') ?>
-          <?!= require('stores/useMasters') ?>
+          <?!= require('stores/use仕様') ?>
+          <?!= require('stores/use原資材') ?>
 
-          <?!= require('components/FormCheckbox') ?>
-          <?!= require('components/FormInput') ?>
+          <?!= require('components/FormNumber') ?>
+          <?!= require('components/Form仕様名') ?>
+          <?!= require('components/Form容リ法') ?>
+          <?!= require('components/Form種別') ?>          
           <?!= require('components/Form製法') ?>
           <?!= require('components/Form組成') ?>
-          <?!= require('components/Form種別') ?>
-          <?!= require('components/Form容リ法') ?>
-          <?!= require('components/Form容リ法商品業種') ?>
-          
-          <?!= require('components/RecordComposition') ?>
-          <?!= require('components/SelectComposition') ?>
+          <?!= require('components/ItemsOfThe仕様') ?>
+                  
+          <?!= require('components/RecordSpec') ?>
+          <?!= require('components/SelectSpec') ?>
           <?!= require('components/Detail') ?>
 
           <?!= require('pages/Assign') ?>
-          <?!= require('pages/Composition') ?>
+          <?!= require('pages/Spec') ?>
           <?!= require('pages/Index') ?>
 
           <?!= require('App') ?>
@@ -81,7 +84,7 @@
             history: createWebHashHistory(),
             routes:[
               { path: '/', name:'一覧', component: Index },
-              { path: '/composition', name:'構成マスタ管理', component: Composition },
+              { path: '/spec', name:'仕様管理', component: Spec },
               { path: '/assign', name:'記入担当割り振り', component: Assign },
             ]
           })

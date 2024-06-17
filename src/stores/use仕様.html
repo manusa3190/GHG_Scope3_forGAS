@@ -1,0 +1,108 @@
+<script>
+
+import { defineStore } from 'pinia'
+import {ref, computed} from 'vue'
+import parseData from './parseData'
+import * as yup from 'yup'
+
+const sampleData = `仕様コード	仕様名	使いまわし	作成者メールアドレス	作成者所属名	更新日時	在庫単位名	在庫単位あたり重量	使用単位あたり重量	種別コード	容リ法分類	容リ法商品業種	プラスチックフラグ	製法コード
+siyou001	テスト仕様_使いまわしあり	TRUE	yuta.ueda@kobayashi.co.jp	製造本部 開発･調達統括部 製造技術開発部 ｴｺ戦略推進G	2024/5/30	メートル	10	10	blisters	プラ包装	対象外	FALSE	aaa
+siyou002	テスト仕様_使いまわしなし	FALSE	yuta.ueda@kobayashi.co.jp	製造本部 開発･調達統括部 製造技術開発部 ｴｺ戦略推進G	2024/5/27	キログラム	10	10	blisters	プラ包装	対象外	FALSE	aaa`
+
+export default defineStore('仕様',()=> {
+  
+    const items = ref([])
+
+    const syncItems = async (item) => new Promise((resolve,reject)=>{
+        if(item){
+          // itemがObject型もしくはObject型配列であるかチェック
+          console.log('syncItems',item)
+          item = JSON.stringify(item)
+        }
+
+        try{
+            google.script.run
+              .withSuccessHandler(res=>{
+                items.value = JSON.parse(res)
+                resolve()
+              })
+              .withFailureHandler(err=>{
+                console.error(err)
+                reject()
+              })
+              .sync仕様(item)            
+          }catch(e){
+            console.log('googleがありません')
+            setTimeout(()=>{
+                items.value = parseData(sampleData).map(item=>Object.assign(item,{組成:[]}))
+                resolve()
+            },1000)             
+          }
+    })
+    
+    const columns = computed(()=>Object.keys(items.value[0] || []))
+
+    const docs = computed(()=>{
+        const key = columns.value[0]
+        return items.value.reduce((acc, item)=>{
+            return Object.assign(acc, {[item[key]]: item})
+          },{})
+    })
+
+    const 有効数値バリデーション = yup.lazy(value=>{
+      if(value<10){
+          return yup.string().test('is-decimal-2','小数第二位まで入力してください',value => /^\d\.\d\d$/.test(value));
+      }else if(value<100){
+          return yup.string().test('is-decimal-1','小数第一位まで入力してください',value => /^\d\d\.\d$/.test(value));
+      }else{
+          return yup.string().test('is-decimal-0','有効数値3ケタの数値を入力してください',value => /^\d{3,}$/.test(value));
+      }
+    })
+
+    const validationSchema = yup.object({
+      種別コード:yup.string().required('選択してください'),
+      仕様名:yup.string().required('必須です')
+        .notOneOf(items.value.map(item=>item['仕様名']),'すでに使用されている仕様名です')
+        .test('no-semicolon', 'セミコロンは使用できません', value => {
+          return !value.includes(';');
+        }),
+      在庫単位あたり重量:yup.number().when("必要_在庫単位あたり重量", {
+        is: true,
+        then:()=> 有効数値バリデーション
+        // then:(shema)=> shema.number().positive('0より大きい数値にしてください') // この書き方はTypescript
+      }),
+      使用単位あたり重量:yup.number().when("必要_在庫単位あたり重量", {
+        is: true,
+        then:()=> 有効数値バリデーション
+      }),
+      容リ法分類:yup.string().required('選択してください'),
+      容リ法商品業種:yup.string().required('必須です').when('容リ法分類',{
+        is:'対象外',
+        then:()=>yup.string().oneOf(['対象外'],'容リ法分類が対象外なら、商品業種も対象外にしてください'),
+        otherwise:()=>yup.string().oneOf(['食料品','清涼飲料等','酒類','油脂加工等','医薬品','化粧品等','小売業','その他'],'当該資材を使用している製品の業種を選んでください')
+      }),
+      プラスチックフラグ:yup.boolean(),
+      製法コード:yup.string().nullable(),
+      組成: yup.array()
+        .min(1,'最低一つは選んでください')
+        .of(yup.object({
+          組成コード:yup.string().nullable(),
+          仕様コード:yup.string().nullable(),
+          IDEA製品コード:yup.string().nullable(),
+          IDEA製品名:yup.string().required('IDEA製品を選んでください'),
+          使用量: yup.number().positive('使用量は正の数にしてください').required(),
+          使用量単位: yup.string().required('使用量単位を選んでください')
+        }))
+        .test('total','合計使用量は100%にしてください',value=>{
+          if(!value)return true
+          if(value.some(v=>v['使用量単位']!=='%'))return true
+
+          return value.reduce((acc,cur)=>acc+cur['使用量'],0)===100
+        })
+        ,
+    })
+
+  return {docs, items, syncItems, columns ,validationSchema}
+})
+
+</script>

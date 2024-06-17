@@ -1,0 +1,32 @@
+<script lang="ts">
+import { defineComponent } from 'vue'
+import { useField } from 'vee-validate'
+
+export default defineComponent({
+  setup(){
+    const { handleChange, value, handleBlur, errorMessage, meta } = useField(() => '仕様名',undefined);
+
+    return { handleChange, value, handleBlur, errorMessage, meta}
+  }
+})
+
+</script>
+
+<template>
+    <div class="">
+      <h2>仕様名</h2>
+      <div class="pl-6">
+        <label class="form-control w-full max-w-xs">
+          <div class="label">
+            <span class="text-error text-sm">{{ errorMessage }}</span>
+          </div>
+
+          <input type="text" class="input input-ghost input-bordered w-full"
+          :value="value" @change="handleChange" 
+          placeholder="ブルーレット詰め替え台紙（小サイズ）_精英堂"
+          />
+
+        </label>
+      </div>
+    </div>
+</template>

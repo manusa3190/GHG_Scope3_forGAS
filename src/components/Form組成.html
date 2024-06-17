@@ -2,10 +2,10 @@
 import { defineComponent, ref, computed } from 'vue'
 import { useField, useFieldArray } from 'vee-validate'
 import useMasters from '@/stores/useMasters';
-import useState from '@/stores/useState';
 
 export default defineComponent({
-  setup(){
+  props:{canEdit:Boolean,種別選択済:Boolean, errors:Array},
+  setup(props){
 
       const {value:種別コード} = useField(()=>'種別コード',undefined)
 
@@ -13,14 +13,14 @@ export default defineComponent({
 
       const edittingIdx = ref(-1)
 
-      const 構成temp = {構成コード:null ,IDEA製品コード:null,IDEA製品名:null,使用量:100,使用量単位:'%'}
+      const 組成temp = {組成コード:null ,IDEA製品コード:null,IDEA製品名:null,使用量:100,使用量単位:'%'}
 
-      const 編集中構成 = ref({...構成temp})
+      const 編集中組成 = ref({...組成temp})
 
-      function 構成に反映(){
+      function 組成に反映(){
           const i = edittingIdx.value
-          update(i,編集中構成.value)
-          編集中構成.value = {...構成temp} 
+          update(i,編集中組成.value)
+          編集中組成.value = {...組成temp} 
       }
 
       const {種別マスタdocs, IDEAマスタv2items} = useMasters()      
@@ -30,23 +30,26 @@ export default defineComponent({
       const 候補のみ = ref(false)
 
       const 小分類items = computed(()=>{
-        const items = IDEAマスタv2items
-              .filter(item=> selected小分類コード.value? item['小分類コード']==selected小分類コード.value:true)
+        if(!種別コード.value)return{}
+
+        let {候補小分類コードリスト} = 種別マスタdocs[種別コード.value]
+
+        const docs = IDEAマスタv2items
+            //   .filter(item=> selected小分類コード.value? item['小分類コード']==selected小分類コード.value:true)
               .filter(item=> 候補のみ.value? 候補小分類コードリスト.includes(item['小分類コード']):true)
               .filter(item=> 推奨のみ.value? item['推奨フラグ']:true)
               .filter(item=> 検索word.value? item['IDEA製品名'].includes(検索word.value):true)
+              .reduce((items,item)=>Object.assign(items,{[item['小分類コード']]:item['小分類名']}),{})
 
-        return items.reduce((items,item)=>Object.assign(items,{[item['小分類コード']]:item['小分類名']}),{})
+        return Object.entries(docs).map(([k,v])=>({小分類コード:Number(k),小分類名:v}))
       })
 
       const selected小分類コード = ref(0)
-
 
       const 候補IDEAマスタitems = computed(() => {
           if(!種別コード.value)return[]
 
           let {候補小分類コードリスト} = 種別マスタdocs[種別コード.value]
-          // 候補小分類コードリスト = 候補小分類コードリスト.map(e=> /^\d+$/.test(e)? Number(e):e)
 
           return IDEAマスタv2items
               .filter(item=> selected小分類コード.value? item['小分類コード']==selected小分類コード.value:true)
@@ -56,39 +59,65 @@ export default defineComponent({
               .sort((a,b)=>a['選択回数']>b['選択回数']? 1:-1)
       })
 
-      return {remove, push, update, fields, 
-      edittingIdx, 構成temp, 編集中構成, 構成に反映, 検索word, 推奨のみ, 候補のみ, 候補IDEAマスタitems,小分類items, selected小分類コード,
-      useState}
+      function showModalandSet編集中組成(f,i){
+        if(!props.canEdit)return
+
+        document.getElementById('組成item_modal').showModal()
+        編集中組成.value = {...f.value}
+        edittingIdx.value = i
+      }
+
+      return {props,showModalandSet編集中組成,
+        remove, push, update, fields, 
+      edittingIdx, 組成temp, 編集中組成, 組成に反映, 検索word, 推奨のみ, 候補のみ, 候補IDEAマスタitems,小分類items, selected小分類コード,
+      }
   }
 })
 
 </script>
 
 <template>
-    <table class=" table table-sm !m-0">
-        <tbody>
-            <tr v-for="(f,i) of fields">
-                <td>
-                    <button class="link max-w-36 truncate" onclick="my_modal_1.showModal()" @click="編集中構成={...f.value};edittingIdx=i">
-                      {{ f.value['IDEA製品名'] || '選択' }}
-                    </button>
-                </td>
+   <div class="">
+      <h2>組成</h2>
 
-                <td>{{ f.value['使用量'] }}</td>
-                <td>{{ f.value['使用量単位'] }}</td>
+      <div class="pl-6">
+        <ul class="text-error text-sm">
+            <li v-for="e of props.errors">{{e[0]}}:{{ e[1] }}</li>
+        </ul>
+        <div v-if="!props.種別選択済">先に種別を選んでください</div>
 
-                <td v-if="useState().isEdit">
-                    <button @click="remove(i)" class="btn btn-warning btn-xs truncate">削除</button>
-                </td>
-            </tr>
-        </tbody>
+        <div v-else class=" max-w-full pl-3 overflow-y-scroll">
+            <table class=" table table-sm !m-0">
+                <tbody>
+                    <tr v-for="(f,i) of fields">
+                        <td class=" max-w-20 truncate">
+                            <a v-if="props.canEdit" class=" link" @click="showModalandSet編集中組成(f,i)">{{ f.value['IDEA製品名'] || '選択' }}</a>
+                            <span v-else>{{ f.value['IDEA製品名'] || '登録されていません' }}</span>
+                        </td>
 
-        <button @click="push(構成temp)" class="btn btn-ghost btn-sm text-error "><span class="pl-5 pr-1">+</span>追加</button>
-    </table>
+                        <td>{{ f.value['使用量'] }}</td>
+                        <td>{{ f.value['使用量単位'] }}</td>
+
+                        <td v-if="props.canEdit">
+                            <button @click="remove(i)" class="btn btn-warning btn-xs truncate">削除</button>
+                        </td>
+                    </tr>
+                </tbody>
+
+                <button v-if="props.canEdit" @click="push(組成temp)" class="btn btn-ghost btn-sm text-primary">
+                    <span class="pl-5 pr-1">+</span>追加
+                </button>
+            </table>
+        </div>
+
+      </div>
+      
+    </div>
+
     
-    <dialog id="my_modal_1" class="modal">
+    <dialog id="組成item_modal" class="modal">
         <div class="modal-box max-w-none w-[800px]">
-            <h3 class="font-bold text-lg mt-0">素材を選択</h3>
+            <h2 class=" mt-0">素材を選択</h2>
 
             <div class="">
                 <div class="flex space-x-3">
@@ -103,22 +132,24 @@ export default defineComponent({
                         <input type="checkbox" v-model="候補のみ" class=" checkbox checkbox-sm">
                         <span class=" label-text">候補のみ</span>
                     </label>
+
+                    <div class="flex-1"></div>
                 </div>
 
                 <div class="flex space-x-3">
                     <ul class=" border h-[480px] w-sm overflow-y-auto">
-                        <li v-for="(小分類名,小分類コード) in 小分類items"  :key="小分類コード"
-                        @click="selected小分類コード=小分類コード"
-                        class="flex w-full cursor-pointer" :class="{'bg-gray-300': selected小分類コード==小分類コード}"
+                        <li v-for="(小分類item, i) in 小分類items"  :key="i"
+                        @click="selected小分類コード=小分類items[i]['小分類コード']"
+                        class="flex w-full cursor-pointer" :class="{'bg-gray-300': selected小分類コード===小分類item['小分類コード']}"
                         >
-                            <div class=" truncate">{{ 小分類名 }}</div>
+                            <div class=" truncate">{{ 小分類item['小分類名'] }}</div>
                         </li>
                     </ul>
 
-                    <ul class=" border flex-1 overflow-y-auto">
+                    <ul class=" border flex-1 max-h-[480px] overflow-y-auto ">
                         <li v-for="(item,i) of 候補IDEAマスタitems"  :key="i"
-                        @click="編集中構成['IDEA製品コード']=item['IDEA製品コード'];編集中構成['IDEA製品名']=item['IDEA製品名']"
-                        class="flex w-full cursor-pointer" :class="{'bg-gray-300': 編集中構成.IDEA製品コード===item['IDEA製品コード']}"
+                        @click="編集中組成['IDEA製品コード']=item['IDEA製品コード'];編集中組成['IDEA製品名']=item['IDEA製品名']"
+                        class="flex w-full cursor-pointer" :class="{'bg-gray-300': 編集中組成.IDEA製品コード===item['IDEA製品コード']}"
                         >
                             <div class=" truncate">{{ item['IDEA製品名'] }}</div>
                             <div class="flex-1"></div>
@@ -132,16 +163,16 @@ export default defineComponent({
             <div>
                 <label class="label inline">
                     <span class=" label-text">使用量</span>
-                    <input type="number" v-model="編集中構成.使用量" class=" input input-sm input-bordered max-w-20">
+                    <input type="number" v-model="編集中組成.使用量" class=" input input-sm input-bordered max-w-20">
                 </label>
 
-                <select class="select select-sm select-bordered w-18" v-model="編集中構成.使用量単位">
-                    <option v-for="item of ['μm','μg','g','%']" :key="item" :value="item">{{ item }}</option>
+                <select class="select select-sm select-bordered w-18" v-model="編集中組成.使用量単位">
+                    <option v-for="item of ['μm','mm','μg','mg','g','%']" :key="item" :value="item">{{ item }}</option>
                 </select>
             </div>
 
             <form method="dialog" class="modal-action space-x-3">
-                <button @click="構成に反映" class="btn btn-primary">反映</button>
+                <button @click="組成に反映" class="btn btn-primary">反映</button>
                 <button class="btn">閉じる</button>
             </form>
         </div>

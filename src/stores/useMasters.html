@@ -1,10 +1,14 @@
 <script>
 
+import { defineStore } from 'pinia';
+import { ref, computed } from 'vue';
+import parseData from './parseData';
+
 export default defineStore('useMasters', ()=>{
   const 種別マスタitems = ref([])
   const IDEAマスタv2items = ref([])
   const 製法マスタitems = ref([])
-  const 容リ法マスタitems = ref([
+  const 容リ法分類items = ref([
     {分類:'対象外',内容:'容器・包装ではないもの'},
     {分類:'プラ容器',内容:'商品を中に入れるもの（袋を含む）\n中身商品と分離した後不要となるプラ製容器・包装'},
     {分類:'紙容器',内容:'商品を中に入れるもの（袋を含む）\n中身商品と分離した後不要となる紙製容器・包装'},
@@ -31,9 +35,10 @@ export default defineStore('useMasters', ()=>{
   const syncMasters = async () => new Promise((resolve,reject) =>{
     google.script.run
       .withSuccessHandler(res=>{
-          種別マスタitems.value = res.種別マスタitems
-          IDEAマスタv2items.value = res.IDEAマスタv2items
-          製法マスタitems.value = res.製法マスタitems
+          const {種別,IDEAv2,製法} = JSON.parse(res)
+          種別マスタitems.value = 種別
+          IDEAマスタv2items.value = IDEAv2
+          製法マスタitems.value = 製法
           resolve()
       })
       .withFailureHandler(err=>{
@@ -44,7 +49,7 @@ export default defineStore('useMasters', ()=>{
 
   const 種別マスタdocs = computed(()=>種別マスタitems.value.reduce((docs,item)=>Object.assign(docs,{[item['種別コード']]:item}),{})) ;
 
-  return {種別マスタitems, 種別マスタdocs, IDEAマスタv2items, 製法マスタitems, 容リ法マスタitems,容リ法商品業種items, syncMasters}
+  return {種別マスタitems, 種別マスタdocs, IDEAマスタv2items, 製法マスタitems, 容リ法分類items,容リ法商品業種items, syncMasters}
 })
 
 </script>

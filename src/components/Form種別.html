@@ -1,13 +1,12 @@
 <script lang="ts">
-import { defineComponent,ref } from 'vue'
+import { computed, defineComponent,ref } from 'vue'
 import { useField } from 'vee-validate'
 import useMasters from '@/stores/useMasters';
-import useState from '@/stores/useState';
 
 export default defineComponent({
-  props:{setValues:Function},
+  props:{setValues:Function, canEdit:Boolean},
   setup(props){
-    const { handleChange, value} = useField(() => '種別コード',undefined);
+    const { handleChange, value, errorMessage, errors} = useField(() => '種別コード',undefined);
 
     const {種別マスタitems, 種別マスタdocs} = useMasters()
 
@@ -30,7 +29,11 @@ export default defineComponent({
       dialog.value.close()
     }
 
-    return { value, handleChange, select, 種別マスタitems, useState, 種別マスタdocs, dialog}
+    const 種別名 = computed(()=>{
+      return value.value? 種別マスタdocs[value.value]['種別名']:'選択されていません'
+    })
+
+    return { select, 種別マスタitems, dialog, props, 種別名, errorMessage, errors}
   }
 })
 
@@ -38,13 +41,21 @@ export default defineComponent({
 
 <template>
   <div>
-    <a  @click="useState().isEdit? dialog.showModal():''" :class="{'!no-underline !text-gray-500':!useState().isEdit}">
-      {{ 種別マスタdocs[value]? 種別マスタdocs[value]['種別名']:'選択されていません' }}
-    </a>
+
+    <h2>種別</h2>
+    <div class="pl-6">
+      <a v-if="props.canEdit"  @click="dialog.showModal()" class=" link"> {{ 種別名 }}</a>
+      <span v-else>{{ 種別名 }}</span>
+      
+    </div>
 
     <dialog class="modal" ref="dialog">
       <div class="modal-box h-[600px] w-[900px]">
-          <h2>種別を選択</h2>
+
+          <div class="flex items-center justify-between">
+            <h2>種別を選択</h2>
+            <button class="btn btn-primary" @click="dialog.close()">閉じる</button>
+          </div>
 
           <ul class="menu cursor-pointer">
             <details>
@@ -67,12 +78,8 @@ export default defineComponent({
 
           </ul>
 
-          <div class=" modal-action">
-            <button class="btn" @click="dialog.close()">閉じる</button>
-          </div>
       </div>
     </dialog>    
   </div>
-
 
 </template>

@@ -1,4 +1,11 @@
-<script>
+<script lang="ts">
+import { defineComponent } from 'vue'
+import { RouterView, useRouter } from 'vue-router'
+import useUsers from '@/stores/useUsers'
+import useState from '@/stores/useState'
+import use原資材 from '@/stores/use原資材'
+import use仕様 from '@/stores/use仕様'
+import useMasters from '@/stores/useMasters'
 
 export default defineComponent({
   setup(){
@@ -11,10 +18,10 @@ export default defineComponent({
 
         try{
           await Promise.all([
-            useTables().sync自所属原資材docs(null),
-            useTables().sync構成docs(null),
+            use原資材().syncItems(null),
+            use仕様().syncItems(null),
             useMasters().syncMasters(),
-            useUsers().get自所属users(null)
+            useUsers().syncUsers()
           ])
         }catch(err){
           alert(`データ同期中にエラーが発生しました。ページリロードを試してください。${err}`)
@@ -39,14 +46,14 @@ export default defineComponent({
     <!-- Page content here -->
     <nav class="w-full navbar bg-base-300">
       <div class="flex-none">
-        <label for="main-drawer" aria-label="open sidebar" class="btn btn-square btn-ghost">
+        <label for="main-drawer" aria-label="open sidebar" class="btn btn-ghost btn-circle">
           <svg fill="none" viewBox="0 0 24 24" class="inline-block stroke-current"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
         </label>
       </div>
 
       <h1 class="flex-1 px-2 mx-2 text-2xl font-bold">{{ $route.name }}</h1>
 
-      <div>{{ useUsers().currentUser? useUsers().currentUser.従業員名 : 'sample@kisatsu.com'}}でログイン中</div>
+      <div>{{ useUsers().currentUser? useUsers().currentUser.従業員名+'でログイン中':'ログインしていません'}}</div>
     </nav>
 
     <div v-if="useState().isLoading" class="w-screen h-screen flex flex-col justify-center items-center fixed top-0 bg-black bg-opacity-30 z-50">
@@ -72,7 +79,13 @@ export default defineComponent({
       <li v-for="r of routes" :key="r.path">
         <RouterLink :to="r.path">{{r.name}}</RouterLink>
       </li>
-    </ul>
+
+      <div class=" flex-1"></div>
+
+      <li>
+        <a target="_blank" href="https:/\/sites.google.com/kobayashi.co.jp/scope3-usergide">説明書</a>
+      </li>
+    </ul> 
   
   </div>
 </div>

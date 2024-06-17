@@ -1,0 +1,56 @@
+<script>
+import { defineComponent, ref } from 'vue'
+import { useField } from 'vee-validate'
+
+export default defineComponent({
+  setup(props){
+
+    const {value} = useField(()=>"仕様コード")
+
+    const {value:仕様コード} = value
+
+    const items = use原資材().items.filter(item=>item['仕様コード']===仕様コード)
+
+    const columns = ['品目コード','品名','取引先コード','取引先名']
+
+    return {items, columns}
+  }
+})
+
+</script>
+
+<template>
+  <div>
+
+    <div class="pl-6">
+      <a onclick="原資材一覧dialog.showModal()" class=" link"> この仕様を使っている原資材一覧</a>
+    </div>
+
+    <dialog class="modal" id="原資材一覧dialog">
+      <div class="modal-box h-[600px] ">
+
+        <h2>原資材一覧</h2>
+        
+        <table class=" table table-sm border">
+          <thead>
+            <tr>
+              <td v-for="colName of columns">{{colName}}</td>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr v-for="item of items">
+              <td v-for="colName of columns">{{ item[colName] }}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <form method="dialog" class="modal-action">
+          <button class="btn">閉じる</button>
+
+        </form>
+
+      </div>
+    </dialog>
+  </div>
+</template>

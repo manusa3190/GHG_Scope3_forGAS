@@ -1,0 +1,90 @@
+<script lang="ts">
+import { defineComponent, ref, computed } from 'vue'
+import useState from '@/stores/useState';
+import use仕様 from '@/stores/use仕様';
+import useUsers from '@/stores/useUsers';
+
+export default defineComponent({
+  props:{form:Object},
+  setup(props){
+    const {form} = props
+
+    const {currentUser, userDocs} = useUsers()
+
+    const dialog = ref(null)
+
+    const 仕様名検索word = ref('')
+    const onlyMe = ref(false)
+    const onlyMyDiv = ref(false)
+
+    const 仕様候補items = computed(()=>{
+        return use仕様().items
+            .filter(item=>item['使いまわし'])
+            .filter(item=>onlyMe.value? item['作成者メールアドレス']===currentUser['メールアドレス']:true)
+            .filter(item=>onlyMyDiv.value? item['作成者所属名']===currentUser['所属名']:true)
+            .filter(item=>item['仕様名'].includes(仕様名検索word.value))
+    })
+
+    function select(i){ // 仕様itemを直接渡そうとするとリアクティブにならないので、indexを渡して、仕様itemを取得する
+        const {values, setValues} = form
+        const 仕様item = 仕様候補items.value[i]
+        console.log(仕様item.仕様コード)
+        const newItem = Object.assign({...values}, 仕様item)
+        setValues(仕様item)
+        dialog.value.close()
+    }    
+
+    return {dialog, 仕様名検索word, onlyMe, onlyMyDiv, 仕様候補items, select, useState, userDocs}
+  }
+})
+
+</script>
+
+<template>
+  <a class=" link " @click="dialog.showModal()">登録済み仕様から選択</a>
+
+  <dialog class="modal" ref="dialog">
+      <div class="modal-box !max-w-none">
+          <form class="flex justify-between items-center">
+              <h2 class="">仕様選択</h2>
+              <button class="btn btn-primary" @click="dialog.close()">閉じる</button>
+          </form>        
+          
+
+          <div class="flex whitespace-nowrap space-x-4">
+              <label>
+                  仕様名検索
+                  <input class="input input-sm input-bordered" v-model="仕様名検索word">
+              </label>
+              <label>
+                 <input type="checkbox" v-model="onlyMe"> 自分が登録した仕様のみ
+              </label>
+              <label>
+                 <input type="checkbox" v-model="onlyMyDiv">自部署が登録した仕様のみ
+              </label>
+          </div>
+
+
+          <table class="table table-sm border">
+              <thead>
+                <tr>
+                  <td>仕様名</td><td>更新日時</td><td>作成者所属名</td><td>作成者名</td>
+                </tr>
+              </thead>
+
+              <tbody>
+                  <tr v-for="(仕様item,i) of 仕様候補items" :key="i" @click="select(i)"
+                  class=" hover:bg-gray-100 cursor-pointer"
+                  >
+                      <td>{{ 仕様item['仕様名'] }}</td>
+                      <td>{{ 仕様item['更新日時'].endsWith('GMT')? new Date(仕様item['更新日時']).toLocaleDateString():仕様item['更新日時'] }}</td>
+                      <td>{{ 仕様item['作成者所属名'] }}</td>
+                      <td>{{ userDocs[仕様item['作成者メールアドレス']]['従業員名'] }}</td>
+                  </tr>
+              </tbody>
+          </table>
+
+
+      </div>
+  </dialog>
+</template>

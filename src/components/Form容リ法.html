@@ -1,55 +1,111 @@
 <script lang="ts">
-import { defineComponent, onMounted } from 'vue'
+import { defineComponent } from 'vue'
 import { useField } from 'vee-validate'
 import useMasters from '@/stores/useMasters'
 
 export default defineComponent({
-  setup(){
-    const { handleChange, value, handleBlur, errorMessage, meta, setValue } = useField(() => '容リ法分類',undefined);
+  props:{canEdit:Boolean},
+  setup(props,{emit}){
 
-    const {容リ法マスタitems} = useMasters()
+    const f分類 = useField(() => '容リ法分類',undefined);
+    const f商品業種 = useField(()=> '容リ法商品業種', undefined);
 
-    return {容リ法マスタitems, handleChange, setValue, value,errorMessage,useState}
+    const fプラスチック = useField(()=> 'プラスチックフラグ', undefined);
+
+    // handleChange, setValue, value,errorMessage
+
+    return {f分類, f分類value:f分類.value, f商品業種, f商品業種value:f商品業種.value, fプラスチック, useMasters, props}
   }
 })
 
 </script>
 
 <template>
-    <dl class="flex justify-between items-end max-w-60 h-8">
-      <dt class="">容リ法分類</dt>
-      <dd :class="{'link':useState().isEdit}" onclick="容リ法modal.showModal()">{{ value || '未選択' }}</dd>
-    </dl>
+  <div>
+      <h2>関連法規</h2>
+      <div class="pl-6">
+          <dl class="flex justify-between items-end max-w-60 h-8">
+            <dt class="">容リ法分類</dt>
+            <dd v-if="props.canEdit" class="link" onclick="容リ法分類modal.showModal()">{{ f分類value || '未選択' }}</dd>
+            <dd v-else>{{ f分類.value || '未選択' }}</dd>
+          </dl>
+          <div class="text-error text-sm">{{ f分類.errorMessage.value }}</div>
 
-    <dialog id="容リ法modal" class="modal ">
+          <dl class="flex justify-between items-end max-w-60 h-8">
+            <dt class="">容リ法商品業種</dt>
+            <dd v-if="props.canEdit" class="link" onclick="容リ法商品業種modal.showModal()">{{ f商品業種value || '未選択' }}</dd>
+            <dd v-else>{{ f商品業種.value.value || '未選択' }}</dd>
+          </dl>
+          <div class="text-error text-sm">{{ f商品業種.errorMessage.value }}</div>
+
+          <dl class="flex justify-between items-end max-w-60 h-8">
+              <dt class="">プラスチック</dt>
+              <dd class="">
+                <input type="checkbox" class=" checkbox checkbox-primary" :checked="fプラスチック.value.value" 
+                @change="fプラスチック.handleChange($event.target.checked)" :disabled="!props.canEdit"/>
+              </dd>
+          </dl>
+
+      </div>    
+  </div>
+
+
+    <dialog id="容リ法分類modal" class="modal">
       <div class="modal-box max-w-none w-[800px]">
 
-        <p class="py-4">該当する容リ法分類を選択してください</p>
+        <form class="flex justify-between" method="dialog">
+           <div class="py-4">該当する容リ法分類を選択してください</div>
+          <button class="btn btn-primary">閉じる</button>
+        </form>
 
-        <a target="_blank" href="https://docs.google.com/presentation/d/16GqBLC_nQK7VapeCOaU8L4LGdBpLFkdG/edit?usp=sharing&ouid=110296435433580358851&rtpof=true&sd=true">容リ法の分類はこちら</a>
+        <a target="_blank" href="https:/\/docs.google.com/presentation/d/1LMdCpMQIVAsfFVy-fa-DSIiq5graoRcg/edit#slide=id.g2e22531d177_0_17">容リ法の判定フローはこちら</a>
 
-        <table class="table table-sm">
+        <table class="table table-sm border">
           <thead>
-            <tr>
-              <td width="100px">分類</td><td>内容</td>
+            <tr class=" bg-slate-600 text-white">
+              <td class=" w-fit">分類</td><td>内容</td>
             </tr>
           </thead>
 
           <tbody>
-            <tr v-for="item of 容リ法マスタitems" :key="item['分類']"
+            <tr v-for="item of useMasters().容リ法分類items" :key="item['分類']"
              class=" hover:bg-base-200 active:bg-base-100 cursor-pointer" 
-             :class="{'bg-orange-100':item['分類']===value}" @click="setValue(item['分類'])"
+             :class="{'bg-orange-100':item['分類']=== f分類value}" @click="f分類.setValue(item['分類'])"
             >
               <td>{{item['分類']}}</td><td>{{item['内容']}}</td>
             </tr>
           </tbody>
         </table>
 
-        <div class="modal-action">
-          <form method="dialog">
-            <button class="btn">閉じる</button>
-          </form>
-        </div>
+      </div>
+    </dialog>
+
+
+    <dialog id="容リ法商品業種modal" class="modal ">
+      <div class="modal-box max-w-none w-[800px]">
+
+        <form class="flex justify-between" method="dialog">
+          <div class="py-4">資材の商品業種を選択してください</div>
+          <button class="btn btn-primary">閉じる</button>
+        </form>
+
+        <table class="table table-sm border">
+          <thead>
+            <tr class=" bg-slate-600 text-white">
+              <td width="120px">分類</td><td>内容</td>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr v-for="item of useMasters().容リ法商品業種items" :key="item['分類']"
+             class=" hover:bg-base-200 active:bg-base-100 cursor-pointer" 
+             :class="{'bg-orange-100':item['分類']===f商品業種value}" @click="f商品業種.setValue(item['分類'])"
+            >
+              <td>{{item['分類']}}</td><td>{{item['内容']}}</td>
+            </tr>
+          </tbody>
+        </table>
+
       </div>
     </dialog>
 </template>

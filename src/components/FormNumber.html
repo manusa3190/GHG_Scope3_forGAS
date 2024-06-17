@@ -1,0 +1,32 @@
+<script>
+import { defineComponent } from 'vue'
+import { useField } from 'vee-validate'
+
+export default defineComponent({
+  props:{name:String, suffix:String, canEdit:Boolean},
+  setup(props){
+    const { handleChange, value, handleBlur, errorMessage, meta } = useField(() => props.name,undefined);
+
+    return {props, handleChange, value, handleBlur, errorMessage, meta}
+  }
+})
+
+</script>
+
+<template>
+  <label class="form-control w-full max-w-xs">
+    <div class="label flex flex-col items-start">
+      <span class="label-text">{{ props.name }}</span>
+      <span v-if="meta.required" class="text-error text-sm">*</span>
+      <span class="text-error text-sm">{{ errorMessage }}</span>
+    </div>
+
+    <div class="input-sm w-40 flex justify-between" :class="{'input input-bordered':props.canEdit}">
+      <input type="text" :disabled="!props.canEdit" class=" w-16 text-right" 
+      :value="value" @change="handleChange" />
+
+      <span v-if="props.suffix" class=" whitespace-nowrap">{{props.suffix}}</span>
+    </div>
+
+  </label>
+</template>

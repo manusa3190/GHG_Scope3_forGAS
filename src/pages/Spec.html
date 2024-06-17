@@ -1,0 +1,173 @@
+<script lang="ts">
+import { reactive, watch, onMounted, defineComponent } from 'vue'
+import { useRoute } from 'vue-router'
+import { Grid, html} from 'gridjs'
+import { useForm} from 'vee-validate'
+import * as yup from 'yup'
+
+import Detail from '../components/Detail.vue'
+
+import use仕様 from '../stores/use仕様'
+import useState from '../stores/useState'
+import useUsers from '../stores/useUsers'
+
+export default defineComponent({
+    components:{Detail},
+    setup() {
+        const route = useRoute()
+
+        const {userDocs} = useUsers()
+        const {種別マスタdocs} = useMasters()
+
+        const form = useForm({
+            validationSchema: use仕様().validationSchema
+        })
+
+        // Indexページから飛んできた場合
+        if(route.query['仕様コード']){
+            const 仕様コード = route.query['仕様コード']
+            const item = use仕様().docs[仕様コード]
+            if(!item)return
+
+            form.setValues(item)
+        }
+
+        var grid;
+
+        onMounted(()=>{
+            const columns = ['仕様コード','仕様名',
+              {id:'作成者メールアドレス',name:'作成者名', formatter: (cell, row) => userDocs[cell].従業員名},
+              {id:'種別コード', name:'種別名', formatter:(cell,row) => 種別マスタdocs[cell].種別名},
+              {id:'更新日時', name:'更新日時', formatter:(cell,row) => (new Date(cell)).toLocaleDateString()}
+            ]
+
+            grid = new Grid({
+                columns,
+                data:[],
+                className:{
+                    table:'border my-3',
+                    th:'!p-1 text-center',
+                    td:'max-w-52 truncate !bg-inherit !py-0.5 text-center',
+                },
+            })
+
+            grid.on('rowClick',(...args)=>{
+                const {cells} = args[1]
+                const 仕様コード = cells[columns.findIndex(c=>c==='仕様コード'||c.id==='仕様コード')].data
+                const item = use仕様().docs[仕様コード]
+                if(!item)return
+                
+                form.setValues(item)
+
+                changeSelectedRowColor()
+            })
+
+            grid.render(document.getElementById('grid-elem'))
+
+            updateGrid()
+        })
+
+        function changeSelectedRowColor(){
+          const rowElems = document.querySelectorAll('.gridjs-tr');
+
+          rowElems.forEach(row => {
+            const idElem = row.firstElementChild
+            const id = idElem.innerText
+            const isSelected = id == form.values['仕様コード']
+
+            row.classList.toggle('bg-orange-100', isSelected)
+          });
+      }
+
+        const query = reactive({
+            word:'',
+            onlyMe:true,
+            onlyMyDiv:true
+        })
+
+        const updateGrid = () =>{
+          let items = use仕様().items.filter(item=>item['使いまわし'])
+          
+          const {currentUser} = useUsers()
+
+          if(query.onlyMe && currentUser){
+              items = items.filter(item=>item['作成者メールアドレス']===currentUser['メールアドレス'])
+          }
+          if(query.onlyMyDiv && currentUser){
+              items = items.filter(item=>item['作成者所属名']===currentUser['所属名'])
+          }
+          if(query.word){
+              items = items.filter(item=>item['仕様名'].includes(query.word))
+          }
+
+          if(grid){
+              grid.updateConfig({data:items})
+              grid.forceRender()
+          }        
+        }
+
+        watchEffect(()=>updateGrid())
+
+        const save = form.handleSubmit( async values=>{
+            useState().$patch({isLoading:true})          
+
+            const {currentUser} = useUsers()
+            values['作成者メールアドレス'] = currentUser['メールアドレス']
+            values['作成者所属名'] = currentUser['所属名']
+
+            await use仕様().syncItems(values)
+
+            grid.updateConfig({data:use仕様().items}).forceRender()
+
+            useState().$patch({isLoading:false})
+        })
+
+        return {form, save, query}
+    }
+})
+
+</script>
+
+<template>
+<div class="flex justify-between h-full w-screen">
+    <!-- 左側 -->
+    <div class="flex-1">
+        <div>
+            <div class="border grid grid-cols-6">
+
+                <label class="form-control w-full max-w-xs col-span-6">
+                    <div class=" label">
+                        <span class=" label-text">仕様名</span>
+                    </div>
+                    <input class=" input input-sm input-bordered" v-model="query.word">
+                </label>
+
+                <label class=" label justify-start cursor-pointer col-span-3">
+                    <input type="checkbox" class=" checkbox checkbox-sm" v-model="query.onlyMe">                    
+                    <span class="label-text">自分が登録した仕様のみ表示</span>
+                </label>
+
+                <label class=" label justify-start cursor-pointer col-span-3">
+                    <input type="checkbox" class=" checkbox checkbox-sm" v-model="query.onlyMyDiv">                    
+                    <span class="label-text">自部署が登録した仕様のみ表示</span>
+                </label>
+
+            </div>
+        </div>
+
+        <div class="my-5 overflow-x-scroll border">
+            <div id="grid-elem" class=" border table"></div>
+        </div>
+    </div>
+
+    <!-- 右側 -->
+    <div class="bg-orange-100 h-full w-96 flex-none p-3">
+        <div v-if=" Object.keys(form.values).length<3 " class="">仕様を選んでください</div>
+
+        <div v-else class="flex flex-col">
+            <Detail :form="form" @save="save" />
+        </div>
+    </div>
+
+</div>
+</template>

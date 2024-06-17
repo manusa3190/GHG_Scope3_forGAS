@@ -1,13 +1,10 @@
 <script>
 
-defineComponent({
+export default defineComponent({
   async setup(){
-    const {currentUser, 自所属users} = useUsers()
-    const {自所属原資材docs, sync自所属原資材docs} = useTables()
+    const {currentUser, users, userDocs} = useUsers()
 
     const columns = ['品目コード','品名','担当者メールアドレス']
-
-    const 自所属原資材items = Object.values(自所属原資材docs).map(item=>columns.map(colName=>item[colName]))
 
     var hot;
 
@@ -15,7 +12,7 @@ defineComponent({
 
         const columnsForHeader = columns.map(colName=>{
           if(colName==='担当者メールアドレス'){
-            return {type:'dropdown', source:自所属users.map(user=>user['メールアドレス'])}
+            return {type:'dropdown', source:users.map(user=>user['メールアドレス'])}
           }else{
             return colName
           }
@@ -23,7 +20,7 @@ defineComponent({
 
         hot = new Handsontable(document.getElementById('example'), {
           columns:columnsForHeader,
-          data:自所属原資材items.slice(0,300),
+          data: use原資材().items.slice(0,300).map(item=>columns.map(colName=>item[colName])), // ２次元配列形式
           rowHeaders: true,
           colHeaders:columns,
           height: 'auto',
@@ -35,7 +32,7 @@ defineComponent({
         // 従業員table
         const grid = new Grid({
           columns:['従業員名', 'メールアドレス'],
-          data:自所属users
+          data:users
         })
 
         grid.render(document.getElementById('従業員table'))
@@ -44,29 +41,34 @@ defineComponent({
     function save(){
       useState().$patch({isLoading:true})
 
-      const 自所属usersDocs = 自所属users.reduce((docs,user)=>Object.assign(docs,{[user['メールアドレス']]:user['従業員名']}),{})
-
       const values = hot.getData()
+
+      const {docs:原資材docs} = use原資材()
 
       const items = values.map(row=>{
           return columns.reduce((item,colName,idx)=>Object.assign(item,{[colName]:row[idx]}),{})
         })
         .filter(item=>item['担当者メールアドレス'])
         .map(item=>{
-          item['担当者名'] = 自所属usersDocs[item['担当者メールアドレス']]
-          return item
+          const {担当者メールアドレス, 品目コード} = item
+          const {従業員名} = userDocs[item['担当者メールアドレス']]
+
+          return Object.assign(原資材docs[品目コード],{担当者メールアドレス, 担当者名:従業員名})
+        })
+
+      console.log(1,items)
+      
+      use原資材().syncItems(items)
+        .then(res=>{
+            alert('担当者割り振りを保存しました')
+        })
+        .catch(err=>{
+            alert(`担当者割り振りの保存に失敗しました。エラーメッセージ：${err}`)
+        })
+        .finally(()=>{
+          useState().$patch({isLoading:false})
         })
       
-        google.script.run
-          .withSuccessHandler(async res =>{
-            alert('担当者割り振りを保存しました')
-            await sync自所属原資材docs()
-            useState().$patch({isLoading:false})
-          })
-          .withFailureHandler(err=>{
-            alert(`担当者割り振りの保存に失敗しました。エラーメッセージ：${err}`)
-          })
-          .set担当者(items)
     }
 
     return {save, currentUser}

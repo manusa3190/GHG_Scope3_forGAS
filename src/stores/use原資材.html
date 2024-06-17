@@ -1,0 +1,55 @@
+<script>
+
+import { defineStore } from 'pinia'
+import {ref, computed} from 'vue'
+import parseData from './parseData'
+
+const sampleData = `品目コード	品名	取引先コード	取引先名	品目区分名	在庫単位名	カテゴリー区分名	担当部署名	担当者メールアドレス	担当者名	仕様コード	更新日時
+10000001	テスト用資材1	600000	テスト用取引先	資材	m	ウェルネスケア	製造本部 開発･調達統括部 製造技術開発部 ｴｺ戦略推進G	yuta.ueda@kobayashi.co.jp	植田 雄太	siyou001	2024/5/30
+10000002	テスト用資材2_使いまわしセット用	600000	テスト用取引先	資材	キログラム	ウェルネスケア	製造本部 開発･調達統括部 製造技術開発部 ｴｺ戦略推進G				2024/05/30
+10000003	テスト用資材3_新規セット用	600000	テスト用取引先	資材	キログラム	ウェルネスケア	製造本部 開発･調達統括部 製造技術開発部 ｴｺ戦略推進G				2024/05/30`
+
+export default defineStore('原資材',()=> {
+  
+    const items = ref([])
+
+    const syncItems = async (item) => new Promise((resolve,reject)=>{
+        if(item){
+          // itemがObject型もしくはObject型配列であるかチェック
+          item = JSON.stringify(item)
+        }
+
+        try{
+          google.script.run
+            .withSuccessHandler(res=>{
+              items.value = JSON.parse(res)
+              resolve()
+            })
+            .withFailureHandler(err=>{
+              console.error(err)
+              reject()
+            })
+            .sync原資材(item)            
+        }catch(e){
+          console.log('googleがありません')
+          setTimeout(()=>{
+              items.value = parseData(sampleData)
+              resolve()
+          },1000)             
+        }
+
+    })
+    
+    const columns = computed(()=>Object.keys(items.value[0] || []))
+
+    const docs = computed(()=>{
+        const key = columns.value[0]
+        return items.value.reduce((acc, item)=>{
+            return Object.assign(acc, {[item[key]]: item})
+          },{})
+    })
+
+  return {docs, items, syncItems, columns}
+})
+
+</script>

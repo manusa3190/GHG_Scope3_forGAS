@@ -5,27 +5,33 @@ import useState from '@/stores/useState';
 import useMasters from '@/stores/useMasters';
 
 export default defineComponent({
+  props:{canEdit:Boolean},
   setup(props){
     const { handleChange, value, handleBlur, errorMessage, meta } = useField(() => '製法コード',undefined);
 
     const {製法マスタitems} = useMasters()
 
-    return {handleChange, value, handleBlur, errorMessage, meta, 製法マスタitems, useState}
+    return {props,handleChange, value, handleBlur, errorMessage, meta, 製法マスタitems, useState}
   }
 })
 
 </script>
 
 <template>
-    <select class="select disabled:bg-inherit disabled:text-black appearance-none"
-    :value="value" @change="handleChange"
-    :disabled="!useState().isEdit">
-        <option
-            v-for="(item, i) of 製法マスタitems"
-            :key="i"
-            :value="item['製法名']"
-        >
-            {{ item['製法名'] }}
-        </option>
-    </select>
+<div class="w-full">
+  <h2>製法</h2>
+  <div class="pl-6">
+      <select class="select disabled:bg-inherit disabled:text-black appearance-none"
+      :value="value" @change="handleChange"
+      :disabled="!props.canEdit">
+          <option
+              v-for="(item, i) of 製法マスタitems"
+              :key="i"
+              :value="item['製法コード']"
+          >
+              {{ item['製法名'] }}
+          </option>
+      </select>    
+  </div>
+</div>
 </template>
