@@ -103,7 +103,8 @@ export default defineComponent({
           if(grid){
               grid.updateConfig({data:items})
               grid.forceRender()
-          }        
+              changeSelectedRowColor()
+          }
         }
 
         watchEffect(()=>updateGrid())
@@ -117,7 +118,7 @@ export default defineComponent({
 
             await use仕様().syncItems(values)
 
-            grid.updateConfig({data:use仕様().items}).forceRender()
+            updateGrid()
 
             useState().$patch({isLoading:false})
         })

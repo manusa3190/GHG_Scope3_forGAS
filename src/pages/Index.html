@@ -112,6 +112,59 @@ export default defineComponent({
           });
       }
 
+      const suspiciousSame仕様 = computed(()=>{
+        console.log(form.values)
+
+        if(!form.meta.value.valid)return null
+        
+        const {values} = form
+        if(!Object.keys(values).length)return null // formが初期状態ではmeta.validがtrueになって通ってしまうので、values=={}の場合は早期リターン
+        if(values['使いまわし'])return null
+
+        // 同一取引先コード、同一種別コード、同一組成の仕様がないかチェック
+        // もし同一仕様の仕様コードがある場合はconfirmして、キャンセルして登録済み仕様から選ぶようにする
+        const isWithin5Percent=(num1,num2)=> Math.abs(num1 - num2) <= num1*0.05
+
+        function confirm組成equality(objArr1,objArr2){
+            if(objArr1.length!==objArr2.length)return false
+            
+            return objArr1.every(obj1=>{
+                const sameIdObj2 = objArr2.find(obj2=>obj2['IDEA製品コード']==obj1['IDEA製品コード']);
+                if(!sameIdObj2){
+                    return false
+                }else{
+                    return isWithin5Percent(obj1['使用量'], sameIdObj2['使用量']) && obj1['使用量単位'] == sameIdObj2['使用量単位']
+                }
+            })
+        }
+
+        const suspicious仕様 = use仕様().items.find( (仕様item,i)=>{
+            const 同一種別 = 仕様item['種別コード'] == values['種別コード']
+
+            const 同一重量 = isWithin5Percent(Number(仕様item['在庫単位あたり重量']),Number(values['在庫単位あたり重量'])) &&
+                            isWithin5Percent(Number(仕様item['使用単位あたり重量']),Number(values['使用単位あたり重量']))
+
+            const 同一組成 = confirm組成equality(仕様item['組成'],values['組成']);
+
+            if(!同一種別 || !同一重量 || !同一組成 )return false
+
+            const 原資材item = use原資材().items.find(原資材item=>原資材item['仕様コード']===仕様item['仕様コード'])
+            
+            if(!原資材item)return false
+            
+            return ['カテゴリー区分名','取引先コード'].every(e=>原資材item[e]===values[e]);
+        })
+
+        if(!suspicious仕様)return null
+
+        const message = `同じ重量、組成の仕様が既に登録されています。
+        既存資材の版違いの場合は、登録済み仕様から選んでください。
+        あえて違う仕様として登録する場合は、このまま保存してください。
+        仕様名：${suspicious仕様['仕様名']}`
+
+        return message
+      })
+
       const save = form.handleSubmit( async values=>{
           useState().$patch({isLoading:true})
 
@@ -154,7 +207,7 @@ export default defineComponent({
 
       watchEffect(()=>updateGrid())
 
-      return {form, save, query}
+      return {form, save, query, suspiciousSame仕様}
   }
 })
 
@@ -188,6 +241,14 @@ export default defineComponent({
         <Detail :form="form" @save="save"/>
       </div>
     </div>
+
+    <!-- アラートウィンドウ -->
+    <div v-if="suspiciousSame仕様 && !form.values.仕様コード" class="absolute top-10 right-96">
+      <div role="alert" class="alert alert-warning w-fit">
+        <span class="whitespace-pre-line">{{suspiciousSame仕様}}</span>
+      </div>
+    </div>
+
   </div>
   
 </template>

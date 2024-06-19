@@ -27,7 +27,7 @@ export default defineComponent({
           <dl class="flex justify-between items-end max-w-60 h-8">
             <dt class="">容リ法分類</dt>
             <dd v-if="props.canEdit" class="link" onclick="容リ法分類modal.showModal()">{{ f分類value || '未選択' }}</dd>
-            <dd v-else>{{ f分類.value || '未選択' }}</dd>
+            <dd v-else>{{ f分類.value.value || '未選択' }}</dd>
           </dl>
           <div class="text-error text-sm">{{ f分類.errorMessage.value }}</div>
 

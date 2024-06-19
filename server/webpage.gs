@@ -1,6 +1,6 @@
 const doGet=()=>{
   const html = HtmlService.createTemplateFromFile('src/main')
-  html.currentUserEmail = ENV==='PROD'?  Session.getActiveUser().getEmail():'t.kamado@kisatsu.com'
+  html.currentUserEmail = Session.getActiveUser().getEmail()
   return html.evaluate()
 }
 
@@ -18,20 +18,21 @@ function require(filePath){
 
     const template = '`' + templateMatch[1] + '`'
 
-    const componentMatch = content.match(/defineComponent\(([\s\S]*?)<\/script>/)
+    const componentMatch = content.match(/export default defineComponent\(([\s\S]*?)<\/script>/)
 
     if(!componentMatch)return
 
     let component = componentMatch[0]
 
-    component = component.replace('})\n\n</script>',`,template:${template} })\n`)
-    component = `const ${fileName} =` + component
+    component = component
+      .replace('export default','const '+fileName+' = ')
+      .replace('})\n\n</script>',`,template:${template} })\n`)
 
     return component
   }
 
   if(content.includes('defineStore')){
-    const storeMatch = content.match(/defineStore([\s\S]*?)<\/script>/)
+    const storeMatch = content.match(/export default defineStore([\s\S]*?)<\/script>/)
 
     if(!storeMatch)return
 

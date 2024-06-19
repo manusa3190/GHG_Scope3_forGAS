@@ -45,10 +45,10 @@ export default defineComponent({
 
   <dialog class="modal" ref="dialog">
       <div class="modal-box !max-w-none">
-          <form class="flex justify-between items-center">
+          <div class="flex justify-between items-center">
               <h2 class="">仕様選択</h2>
               <button class="btn btn-primary" @click="dialog.close()">閉じる</button>
-          </form>        
+          </div>
           
 
           <div class="flex whitespace-nowrap space-x-4">
@@ -79,7 +79,7 @@ export default defineComponent({
                       <td>{{ 仕様item['仕様名'] }}</td>
                       <td>{{ 仕様item['更新日時'].endsWith('GMT')? new Date(仕様item['更新日時']).toLocaleDateString():仕様item['更新日時'] }}</td>
                       <td>{{ 仕様item['作成者所属名'] }}</td>
-                      <td>{{ userDocs[仕様item['作成者メールアドレス']]['従業員名'] }}</td>
+                      <td>{{ userDocs[仕様item['作成者メールアドレス']]? userDocs[仕様item['作成者メールアドレス']]['従業員名']:仕様item['作成者メールアドレス'] }}</td>
                   </tr>
               </tbody>
           </table>

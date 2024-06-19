@@ -1,9 +1,7 @@
-
-
 class Logger {
 
   static log(content){
-    const ログsheet = SpreadsheetApp.openById(ログ).getActiveSheet()
+    const ログsheet = SpreadsheetApp.openById(ログid).getActiveSheet()
 
     const toString = Object.prototype.toString
     const type = toString.call(content).slice(8, -1).toLowerCase();

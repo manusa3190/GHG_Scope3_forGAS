@@ -17,7 +17,7 @@ export default defineComponent({
   <label class="form-control w-full max-w-xs">
     <div class="label flex flex-col items-start">
       <span class="label-text">{{ props.name }}</span>
-      <span v-if="meta.required" class="text-error text-sm">*</span>
+      <span v-if="props.name==='使用単位あたり重量'" class="text-sm">（1製品あたりではなく、1包or1枚あたり）</span>
       <span class="text-error text-sm">{{ errorMessage }}</span>
     </div>
 
